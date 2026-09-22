@@ -1,0 +1,17 @@
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\bin\Debug\net8.0\EnglishLearning.Infrastructure.deps.json
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\bin\Debug\net8.0\EnglishLearning.Infrastructure.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\bin\Debug\net8.0\EnglishLearning.Infrastructure.pdb
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\bin\Debug\net8.0\EnglishLearning.Application.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\bin\Debug\net8.0\EnglishLearning.Domain.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\bin\Debug\net8.0\EnglishLearning.Application.pdb
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\bin\Debug\net8.0\EnglishLearning.Domain.pdb
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.csproj.AssemblyReference.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.AssemblyInfoInputs.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.AssemblyInfo.cs
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.csproj.CoreCompileInputs.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishL.A47EF1B1.Up2Date
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\refint\EnglishLearning.Infrastructure.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.pdb
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\ref\EnglishLearning.Infrastructure.dll

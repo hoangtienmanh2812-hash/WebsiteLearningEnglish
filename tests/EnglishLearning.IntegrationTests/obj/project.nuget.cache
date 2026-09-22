@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "dgSpecHash": "49rs2R8p0xQ=",
+  "success": false,
+  "projectFilePath": "D:\\WebsiteLearningEnglish\\tests\\EnglishLearning.IntegrationTests\\EnglishLearning.IntegrationTests.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\manha\\.nuget\\packages\\coverlet.collector\\6.0.0\\coverlet.collector.6.0.0.nupkg.sha512",
+    "C:\\Users\\manha\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.29\\microsoft.netcore.app.ref.8.0.29.nupkg.sha512",
+    "C:\\Users\\manha\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.29\\microsoft.windowsdesktop.app.ref.8.0.29.nupkg.sha512",
+    "C:\\Users\\manha\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.29\\microsoft.aspnetcore.app.ref.8.0.29.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1103",
+      "level": "Error",
+      "message": "Unable to find a stable package Microsoft.NET.Test.Sdk with version (>= 17.8.0)\r\n  - Found 1 version(s) in Microsoft Visual Studio Offline Packages [ Nearest version: 17.10.0-preview-24080-01 ]\r\n  - Found 0 version(s) in Package",
+      "projectPath": "D:\\WebsiteLearningEnglish\\tests\\EnglishLearning.IntegrationTests\\EnglishLearning.IntegrationTests.csproj",
+      "filePath": "D:\\WebsiteLearningEnglish\\tests\\EnglishLearning.IntegrationTests\\EnglishLearning.IntegrationTests.csproj",
+      "libraryId": "Microsoft.NET.Test.Sdk",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package xunit. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, Package",
+      "projectPath": "D:\\WebsiteLearningEnglish\\tests\\EnglishLearning.IntegrationTests\\EnglishLearning.IntegrationTests.csproj",
+      "filePath": "D:\\WebsiteLearningEnglish\\tests\\EnglishLearning.IntegrationTests\\EnglishLearning.IntegrationTests.csproj",
+      "libraryId": "xunit",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package xunit.runner.visualstudio. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, Package",
+      "projectPath": "D:\\WebsiteLearningEnglish\\tests\\EnglishLearning.IntegrationTests\\EnglishLearning.IntegrationTests.csproj",
+      "filePath": "D:\\WebsiteLearningEnglish\\tests\\EnglishLearning.IntegrationTests\\EnglishLearning.IntegrationTests.csproj",
+      "libraryId": "xunit.runner.visualstudio",
+      "targetGraphs": [
+        "net8.0"
+      ]
+    }
+  ]
+}

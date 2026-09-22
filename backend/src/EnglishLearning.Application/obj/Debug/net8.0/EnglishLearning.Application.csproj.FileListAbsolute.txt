@@ -1,0 +1,15 @@
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\bin\Debug\net8.0\EnglishLearning.Application.deps.json
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\bin\Debug\net8.0\EnglishLearning.Application.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\bin\Debug\net8.0\EnglishLearning.Application.pdb
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\bin\Debug\net8.0\EnglishLearning.Domain.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\bin\Debug\net8.0\EnglishLearning.Domain.pdb
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.csproj.AssemblyReference.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.GeneratedMSBuildEditorConfig.editorconfig
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.AssemblyInfoInputs.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.AssemblyInfo.cs
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.csproj.CoreCompileInputs.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishL.64EE6E81.Up2Date
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\refint\EnglishLearning.Application.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.pdb
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\ref\EnglishLearning.Application.dll
