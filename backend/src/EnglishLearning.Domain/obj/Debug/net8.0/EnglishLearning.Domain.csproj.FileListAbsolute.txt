@@ -9,3 +9,4 @@ D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\En
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\refint\EnglishLearning.Domain.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.pdb
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\ref\EnglishLearning.Domain.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.sourcelink.json

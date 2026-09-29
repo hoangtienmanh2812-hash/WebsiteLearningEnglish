@@ -1,53 +1,10 @@
+import { useNavigate } from 'react-router-dom';
 import { getAuthUser } from '../auth/authStorage';
 import './dashboard.css';
 
-type DashboardIconName = 'lesson' | 'words' | 'exercise' | 'chat';
-
-function DashboardIcon({ name }: { name: DashboardIconName }) {
-  if (name === 'lesson') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5v-16Z" />
-        <path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20M8 7h8M8 10h6" />
-      </svg>
-    );
-  }
-
-  if (name === 'words') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M4 4h16v12H9l-5 4V4Z" />
-        <path d="M8 8h8M8 11h5" />
-      </svg>
-    );
-  }
-
-  if (name === 'exercise') {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="5" y="3" width="14" height="18" rx="2" />
-        <path d="m8.5 12 2 2 4.5-5M8.5 17h7M9 6h6" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M20 11.5a7.7 7.7 0 0 1-8 7.5 8.8 8.8 0 0 1-3.1-.6L4 20l1.5-4.1A7.2 7.2 0 0 1 4 11.5 7.7 7.7 0 0 1 12 4a7.7 7.7 0 0 1 8 7.5Z" />
-      <path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01" />
-    </svg>
-  );
-}
-
-const featureCards: { title: string; description: string; icon: DashboardIconName; accent: string }[] = [
-  { title: 'Bài học', description: 'Các bài học theo lộ trình sẽ xuất hiện tại đây.', icon: 'lesson', accent: 'coral' },
-  { title: 'Từ vựng', description: 'Không gian ghi nhớ từ mới của bạn đang được chuẩn bị.', icon: 'words', accent: 'yellow' },
-  { title: 'Bài tập', description: 'Luyện tập và củng cố kiến thức trong một nơi riêng.', icon: 'exercise', accent: 'rose' },
-  { title: 'Chatbot', description: 'Người bạn đồng hành luyện tiếng Anh sẽ sớm có mặt.', icon: 'chat', accent: 'peach' },
-];
-
 export default function DashboardPage() {
   const user = getAuthUser();
+  const navigate = useNavigate(); // Khởi tạo hàm chuyển trang
   const firstName = user?.fullName.trim().split(/\s+/).at(-1) || 'bạn';
   const today = new Intl.DateTimeFormat('vi-VN', {
     weekday: 'long',
@@ -85,30 +42,33 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <section className="dashboard-features" aria-labelledby="learning-areas-title">
-        <div className="dashboard-features__heading">
-          <div>
-            <p className="section-kicker">KHÁM PHÁ</p>
-            <h2 id="learning-areas-title">Khu vực học tập</h2>
+      {/* --- KHU VỰC TIẾN ĐỘ HỌC TẬP (CUỘN NGANG) --- */}
+      <div className="learning-path-section">
+        <h3 className="section-title">TIẾN ĐỘ HÀNH TRÌNH CỦA BẠN</h3>
+        
+        <div className="path-container">
+          {/* Đường uốn lượn SVG ngang */}
+          <svg className="path-svg" viewBox="0 0 2000 150" preserveAspectRatio="none">
+            <path d="M 50 75 Q 150 150 250 75 T 450 75 T 650 75 T 850 75 T 1050 75 T 1250 75 T 1450 75 T 1650 75 T 1850 75" 
+                  fill="none" stroke="#e5e7eb" strokeWidth="8" strokeLinecap="round"/>
+          </svg>
+          
+          {/* Danh sách 10 nút bài học có gắn sự kiện click sang Quiz */}
+          <div className="nodes-row">
+            <div className="node up active" onClick={() => navigate('/quiz/1')}><div className="circle">📖</div><span>Bài 1</span></div>
+            <div className="node down" onClick={() => navigate('/quiz/2')}><div className="circle">🎧</div><span>Bài 2</span></div>
+            <div className="node up" onClick={() => navigate('/quiz/3')}><div className="circle">🗣️</div><span>Bài 3</span></div>
+            <div className="node down" onClick={() => navigate('/quiz/4')}><div className="circle">📝</div><span>Bài 4</span></div>
+            <div className="node up" onClick={() => navigate('/quiz/5')}><div className="circle">📚</div><span>Bài 5</span></div>
+            <div className="node down" onClick={() => navigate('/quiz/6')}><div className="circle">🧩</div><span>Bài 6</span></div>
+            <div className="node up" onClick={() => navigate('/quiz/7')}><div className="circle">🎯</div><span>Bài 7</span></div>
+            <div className="node down" onClick={() => navigate('/quiz/8')}><div className="circle">🏆</div><span>Bài 8</span></div>
+            <div className="node up" onClick={() => navigate('/quiz/9')}><div className="circle">🚀</div><span>Bài 9</span></div>
+            <div className="node down chest" onClick={() => navigate('/quiz/10')}><div className="circle">🎁</div><span>Thưởng</span></div>
           </div>
-          <span className="dashboard-features__caption">Đang được xây dựng</span>
         </div>
-
-        <div className="feature-grid">
-          {featureCards.map((feature) => (
-            <article className="feature-card" key={feature.title}>
-              <span className={`feature-card__icon feature-card__icon--${feature.accent}`}>
-                <DashboardIcon name={feature.icon} />
-              </span>
-              <div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-              </div>
-              <span className="feature-card__status">Sắp ra mắt</span>
-            </article>
-          ))}
-        </div>
-      </section>
+      </div>
+      
     </section>
   );
 }

@@ -1,0 +1,222 @@
+/* Bố cục toàn trang */
+.quiz-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #ffffff;
+  color: #374151;
+}
+
+/* --- HEADER (Thanh tiến độ & Trái tim) --- */
+.quiz-header {
+  display: flex;
+  align-items: center;
+  padding: 20px 40px;
+  gap: 20px;
+  max-width: 1040px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  color: #afb1b6;
+  cursor: pointer;
+  padding: 8px;
+}
+.close-btn:hover { color: #4b5563; }
+
+.progress-bar {
+  flex: 1;
+  height: 16px;
+  background-color: #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #58cc02;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+.heart-count {
+  font-weight: 700;
+  color: #ef4444;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- NỘI DUNG CÂU HỎI --- */
+.quiz-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.question-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 40px;
+  text-align: left;
+}
+
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.option-btn {
+  padding: 16px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #4b5563;
+  background-color: #ffffff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #e5e7eb;
+  text-align: left;
+  transition: all 0.1s;
+}
+
+.option-btn:hover:not(:disabled) { background-color: #f9fafb; }
+.option-btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 transparent;
+}
+
+/* Các trạng thái của nút chọn */
+.option-btn.selected {
+  border-color: #84d8ff;
+  background-color: #ddf4ff;
+  color: #1cb0f6;
+  box-shadow: 0 4px 0 #84d8ff;
+}
+
+.option-btn.correct {
+  border-color: #58cc02;
+  background-color: #d7ffb8;
+  color: #58cc02;
+  box-shadow: 0 4px 0 #58cc02;
+}
+
+.option-btn.wrong {
+  border-color: #ea2b2b;
+  background-color: #ffdfe0;
+  color: #ea2b2b;
+  box-shadow: 0 4px 0 #ea2b2b;
+}
+
+/* --- FOOTER (Nút Kiểm tra / Tiếp tục) --- */
+.quiz-footer {
+  padding: 30px 40px;
+  border-top: 2px solid #e5e7eb;
+  background-color: #ffffff;
+  transition: background-color 0.2s;
+}
+
+.quiz-footer.footer-correct { background-color: #d7ffb8; border-color: transparent; }
+.quiz-footer.footer-wrong { background-color: #ffdfe0; border-color: transparent; }
+
+.footer-content {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.result-message {
+  font-size: 24px;
+  font-weight: 800;
+}
+.footer-correct .result-message { color: #58cc02; }
+.footer-wrong .result-message { color: #ea2b2b; }
+
+.action-btn {
+  padding: 14px 40px;
+  font-size: 16px;
+  font-weight: 800;
+  color: white;
+  background-color: #58cc02;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #46a302;
+  text-transform: uppercase;
+  transition: all 0.1s;
+  min-width: 150px;
+}
+
+.action-btn:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 transparent;
+}
+
+.action-btn:disabled {
+  background-color: #e5e7eb;
+  box-shadow: none;
+  color: #afb1b6;
+  cursor: not-allowed;
+  transform: translateY(4px);
+}
+
+.footer-wrong .action-btn {
+  background-color: #ea2b2b;
+  box-shadow: 0 4px 0 #c81818;
+}
+
+/* --- MÀN HÌNH KẾT QUẢ --- */
+.quiz-result {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.result-icon {
+  font-size: 80px;
+  margin-bottom: 20px;
+}
+
+.result-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffc800;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.result-stats {
+  font-size: 20px;
+  color: #4b5563;
+  margin-bottom: 40px;
+}
+
+.result-actions .action-btn {
+  width: 300px;
+  padding: 16px;
+  font-size: 18px;
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}

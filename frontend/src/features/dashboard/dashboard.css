@@ -294,3 +294,101 @@
   .dashboard-hero__mini-card { right: 24px; bottom: 24px; }
   .feature-grid { grid-template-columns: 1fr; }
 }
+/* --- CSS CHO KHU VỰC ZIG ZAG --- */
+.learning-path-section {
+  margin: 40px 0;
+}
+
+.section-title {
+  font-size: 14px;
+  color: #ef4444;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.path-container {
+  position: relative;
+  width: 100%;
+  overflow-x: auto; 
+  padding: 30px 0;
+  scrollbar-width: none; 
+}
+
+.path-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Kéo dài đường SVG ra 2000px và căn lề trái */
+.path-svg {
+  position: absolute;
+  top: 50%;
+  left: 0; /* Đổi từ 50% thành 0 để căn mép trái khi cuộn */
+  transform: translateY(-50%); /* Chỉ căn giữa theo chiều dọc */
+  width: 2000px; /* Tăng chiều dài để chứa đủ 10 nút */
+  height: 200px;
+  z-index: 1;
+}
+
+/* Kéo dài hàng chứa các nút ra tương ứng */
+.nodes-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 1900px; /* Mở rộng không gian dàn đều cho 10 nút */
+  margin: 0 50px; /* Căn lề trái/phải 50px để khớp với đường SVG */
+}
+.node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.node:hover {
+  transform: translateY(-5px);
+}
+
+/* 3. Tăng độ nảy lên/xuống của hiệu ứng Zig-zag */
+.node.up { margin-bottom: 100px; } /* Tăng từ 70px lên 100px */
+.node.down { margin-top: 100px; }   /* Tăng từ 70px lên 100px */
+
+/* 4. Phóng to vòng tròn và icon bên trong */
+.circle {
+  width: 80px;  /* Tăng từ 60px lên 80px */
+  height: 80px; /* Tăng từ 60px lên 80px */
+  border-radius: 50%;
+  background-color: #e5e7eb;
+  border: 5px solid #d1d5db; /* Viền dày hơn một chút (5px) */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 36px; /* Phóng to icon (Tăng từ 24px lên 36px) */
+  box-shadow: 0 6px 0 #9ca3af; /* Đổ bóng sâu hơn một chút */
+  margin-bottom: 12px;
+}
+
+/* 5. Phóng to chữ (Bài 1, Bài 2...) */
+.node span {
+  font-size: 16px; /* Tăng từ 14px lên 16px */
+  font-weight: 700; /* Làm chữ đậm hơn */
+  color: #4b5563;
+}
+.node.active .circle {
+  background-color: #58cc02;
+  border-color: #ffffff;
+  color: white;
+  box-shadow: 0 5px 0 #46a302, 0 0 0 4px #58cc02;
+  transform: scale(1.15); 
+}
+
+.node.chest .circle {
+  border-radius: 12px;
+  background-color: #ffc800;
+  border-color: #ffc800;
+  box-shadow: 0 5px 0 #d9a000;
+}

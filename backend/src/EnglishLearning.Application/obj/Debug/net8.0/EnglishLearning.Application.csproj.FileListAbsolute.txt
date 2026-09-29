@@ -13,3 +13,4 @@ D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\refint\EnglishLearning.Application.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.pdb
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\ref\EnglishLearning.Application.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.sourcelink.json

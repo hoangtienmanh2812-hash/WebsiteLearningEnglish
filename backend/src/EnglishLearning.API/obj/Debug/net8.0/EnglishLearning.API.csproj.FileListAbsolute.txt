@@ -146,3 +146,4 @@ D:\WebsiteLearningEnglish\backend\src\EnglishLearning.API\obj\Debug\net8.0\Engli
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.API\obj\Debug\net8.0\ref\EnglishLearning.API.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.API\bin\Debug\net8.0\BCrypt.Net-Next.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.API\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.API\obj\Debug\net8.0\EnglishLearning.API.sourcelink.json

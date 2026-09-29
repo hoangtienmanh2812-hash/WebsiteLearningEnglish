@@ -1,18 +1,33 @@
 .main-layout {
-  min-height: 100vh;
+  display: flex;          /* Chia bố cục thành hàng ngang */
+  flex-direction: row;
+  height: 100vh;          /* Giới hạn chiều cao bằng 100% màn hình */
+  overflow: hidden;       /* Ẩn thanh cuộn toàn trang... */
   color: #24201f;
   background: #fff9fb;
 }
 
 .main-layout__content {
-  width: min(100% - 48px, 1180px);
-  margin: 0 auto;
-  padding: 48px 0 70px;
+  flex: 1;                /* ...để phần nội dung bên phải chiếm hết diện tích còn lại */
+  overflow-y: auto;       /* ...và tự có thanh cuộn dọc riêng biệt */
+  padding: 48px 40px 70px;
 }
 
+/* Giữ giới hạn chiều rộng 1180px cho nội dung bên trong như thiết kế cũ của bạn */
+.main-layout__content > * {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* Trên điện thoại: Tự động quay về xếp dọc (menu trên, nội dung dưới) */
 @media (max-width: 720px) {
+  .main-layout {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
   .main-layout__content {
-    width: min(100% - 32px, 560px);
-    padding-top: 30px;
+    overflow-y: visible;
+    padding: 30px 16px;
   }
 }
