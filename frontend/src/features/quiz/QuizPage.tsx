@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getAuthUser } from '../auth/authStorage';
 import './quiz.css';
 
 interface Question {
@@ -11,7 +12,8 @@ interface Question {
 
 export default function QuizPage() {
   const navigate = useNavigate();
-  const { id } = useParams(); // Lấy ID bài học từ URL
+  const { id } = useParams(); // Lấy ID bài học từ URL (ví dụ: /quiz/1 thì id = '1')
+  const user = getAuthUser();
   
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,26 @@ export default function QuizPage() {
     fetchQuestions();
   }, [id]);
 
+  // Hàm gọi API báo hoàn thành bài học khi user bấm kết thúc
+  const markLessonAsCompleted = async () => {
+    if (!user?.id || !id) return;
+
+    try {
+      await fetch('http://localhost:5219/api/progress/complete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          lessonId: Number(id), // Gửi đúng số thứ tự bài học hiện tại lên để mở khóa bài tiếp theo
+        }),
+      });
+    } catch (err) {
+      console.error('Lỗi cập nhật tiến độ:', err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="quiz-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
@@ -71,12 +93,14 @@ export default function QuizPage() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
       setSelectedOption(null);
       setIsSubmitted(false);
     } else {
+      // Đã đến câu cuối cùng, tiến hành gọi API mở khóa bài tiếp theo
+      await markLessonAsCompleted();
       setShowResult(true);
     }
   };

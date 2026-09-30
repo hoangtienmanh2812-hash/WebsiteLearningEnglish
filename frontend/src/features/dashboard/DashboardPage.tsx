@@ -1,16 +1,44 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuthUser } from '../auth/authStorage';
 import './dashboard.css';
 
+interface LessonProgress {
+  lessonId: number;
+  isUnlocked: boolean;
+  isCompleted: boolean;
+}
+
 export default function DashboardPage() {
   const user = getAuthUser();
-  const navigate = useNavigate(); // Khởi tạo hàm chuyển trang
-  const firstName = user?.fullName.trim().split(/\s+/).at(-1) || 'bạn';
+  const navigate = useNavigate();
+  const [lessonsProgress, setLessonsProgress] = useState<LessonProgress[]>([]);
+
+  // Ép kiểu user.fullName để tránh lỗi TypeScript nếu user có thể là null
+  const userName = user?.fullName || 'bạn';
+  const firstName = userName.trim().split(/\s+/).at(-1) || 'bạn';
+  
   const today = new Intl.DateTimeFormat('vi-VN', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   }).format(new Date());
+
+  const lessonIcons = ['📖', '🎧', '🗣️️', '📝', '📚', '🧩', '🎯', '🏆', '🚀', '🎁'];
+
+  useEffect(() => {
+    if (user?.id) {
+      // Đảm bảo URL API trỏ đúng cổng Backend của bạn (ví dụ: port 5000 hoặc 5173 tùy cấu hình)
+      fetch(`http://localhost:5219/api/progress/${user.id}`)
+        .then((res) => res.json())
+        .then((data: LessonProgress[]) => {
+          if (Array.isArray(data)) {
+            setLessonsProgress(data);
+          }
+        })
+        .catch((err) => console.error("Lỗi khi tải tiến độ học:", err));
+    }
+  }, [user]);
 
   return (
     <section className="dashboard" aria-labelledby="dashboard-title">
@@ -47,24 +75,41 @@ export default function DashboardPage() {
         <h3 className="section-title">TIẾN ĐỘ HÀNH TRÌNH CỦA BẠN</h3>
         
         <div className="path-container">
-          {/* Đường uốn lượn SVG ngang */}
           <svg className="path-svg" viewBox="0 0 2000 150" preserveAspectRatio="none">
             <path d="M 50 75 Q 150 150 250 75 T 450 75 T 650 75 T 850 75 T 1050 75 T 1250 75 T 1450 75 T 1650 75 T 1850 75" 
-                  fill="none" stroke="#e5e7eb" strokeWidth="8" strokeLinecap="round"/>
+                fill="none" stroke="#e5e7eb" strokeWidth="8" strokeLinecap="round"/>
           </svg>
           
-          {/* Danh sách 10 nút bài học có gắn sự kiện click sang Quiz */}
           <div className="nodes-row">
-            <div className="node up active" onClick={() => navigate('/quiz/1')}><div className="circle">📖</div><span>Bài 1</span></div>
-            <div className="node down" onClick={() => navigate('/quiz/2')}><div className="circle">🎧</div><span>Bài 2</span></div>
-            <div className="node up" onClick={() => navigate('/quiz/3')}><div className="circle">🗣️</div><span>Bài 3</span></div>
-            <div className="node down" onClick={() => navigate('/quiz/4')}><div className="circle">📝</div><span>Bài 4</span></div>
-            <div className="node up" onClick={() => navigate('/quiz/5')}><div className="circle">📚</div><span>Bài 5</span></div>
-            <div className="node down" onClick={() => navigate('/quiz/6')}><div className="circle">🧩</div><span>Bài 6</span></div>
-            <div className="node up" onClick={() => navigate('/quiz/7')}><div className="circle">🎯</div><span>Bài 7</span></div>
-            <div className="node down" onClick={() => navigate('/quiz/8')}><div className="circle">🏆</div><span>Bài 8</span></div>
-            <div className="node up" onClick={() => navigate('/quiz/9')}><div className="circle">🚀</div><span>Bài 9</span></div>
-            <div className="node down chest" onClick={() => navigate('/quiz/10')}><div className="circle">🎁</div><span>Thưởng</span></div>
+            {Array.from({ length: 10 }, (_, index) => {
+              const lessonId = index + 1;
+              const progress = lessonsProgress.find((p) => p.lessonId === lessonId);
+              const isUnlocked = lessonId === 1 ? true : (progress ? progress.isUnlocked : false);
+              const isCompleted = progress ? progress.isCompleted : false;
+              
+              const isUp = lessonId % 2 !== 0;
+              const nodeClass = `node ${isUp ? 'up' : 'down'} ${isCompleted ? 'completed' : ''} ${isUnlocked ? 'active' : 'locked'}`;
+
+              return (
+                <div 
+                  key={lessonId}
+                  className={nodeClass}
+                  onClick={() => {
+                    if (isUnlocked) {
+                      navigate(`/quiz/${lessonId}`);
+                    } else {
+                      alert("Bạn cần hoàn thành bài học trước để mở khóa bài này!");
+                    }
+                  }}
+                  style={{ cursor: isUnlocked ? 'pointer' : 'not-allowed', opacity: isUnlocked ? 1 : 0.5 }}
+                >
+                  <div className="circle">
+                    {isUnlocked ? lessonIcons[index] : '🔒'}
+                  </div>
+                  <span>{lessonId === 10 ? 'Thưởng' : `Bài ${lessonId}`}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
