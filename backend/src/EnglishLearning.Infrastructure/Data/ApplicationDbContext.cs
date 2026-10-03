@@ -9,7 +9,7 @@ namespace EnglishLearning.Infrastructure.Data
         }
         public DbSet<UserProgress> UserProgresses { get; set; }
         public DbSet<User> Users { get; set; }
-        
+        public DbSet<Lesson> Lessons { get; set; }
         // 👉 Thêm DbSet cho bảng Questions vào đây
         public DbSet<Question> Questions { get; set; }
 

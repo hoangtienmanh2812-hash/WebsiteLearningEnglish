@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
 
 // Khởi tạo các services từ Infrastructure (EF Core, Database...)
 builder.Services.AddInfrastructure(builder.Configuration);

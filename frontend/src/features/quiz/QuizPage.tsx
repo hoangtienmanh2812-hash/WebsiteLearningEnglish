@@ -32,8 +32,29 @@ export default function QuizPage() {
         if (!response.ok) {
           throw new Error('Không thể tải dữ liệu câu hỏi từ server');
         }
-        const data = await response.json();
-        setQuestions(data);
+        const data = await response.json() as {
+          questions?: Array<{
+            question: string;
+            "1": string;
+            "2": string;
+            "3": string;
+            "4": string;
+            "correct-ans": string;
+          }>;
+        };
+        if (!Array.isArray(data.questions)) {
+          throw new Error('Dữ liệu câu hỏi không đúng định dạng');
+        }
+
+        setQuestions(data.questions.map((item, index) => {
+          const options = [item["1"], item["2"], item["3"], item["4"]];
+          return {
+            id: index + 1,
+            question: item.question,
+            options,
+            correctAnswer: options[Number(item["correct-ans"]) - 1] ?? "",
+          };
+        }));
       } catch (error) {
         console.error('Lỗi khi gọi API:', error);
       } finally {

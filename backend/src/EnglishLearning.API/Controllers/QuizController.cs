@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using EnglishLearning.Infrastructure.Data; // Thêm namespace chứa ApplicationDbContext
+using EnglishLearning.Infrastructure.Data;
 
 namespace EnglishLearning.API.Controllers;
 
@@ -9,35 +9,35 @@ namespace EnglishLearning.API.Controllers;
 public class QuizController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly HttpClient _httpClient;
 
-    // Tiêm ApplicationDbContext vào Controller
-    public QuizController(ApplicationDbContext context)
+    public QuizController(ApplicationDbContext context, IHttpClientFactory httpClientFactory)
     {
         _context = context;
+        _httpClient = httpClientFactory.CreateClient();
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetQuizQuestions(int id)
+    public async Task<IActionResult> GetQuiz(int id)
     {
-        // Truy vấn danh sách câu hỏi từ database dựa theo LessonId (id bài học)
-        var questionsFromDb = await _context.Questions
-            .Where(q => q.LessonId == id)
-            .ToListAsync();
-
-        if (questionsFromDb == null || !questionsFromDb.Any())
+        // 1. Tìm bài học trong cơ sở dữ liệu SQL Server theo ID
+        var lesson = await _context.Lessons.FindAsync(id);
+        if (lesson == null || string.IsNullOrEmpty(lesson.DriveUrl))
         {
-            return NotFound(new { message = "Không tìm thấy câu hỏi cho bài học này." });
+            return NotFound(new { message = "Không tìm thấy bài học hoặc chưa có link dữ liệu!" });
         }
 
-        // Map dữ liệu từ DB sang cấu trúc mà Frontend đang cần
-        var result = questionsFromDb.Select(q => new
+        try
         {
-            id = q.Id,
-            question = q.QuestionText,
-            options = new string[] { q.Option1, q.Option2, q.Option3, q.Option4 },
-            correctAnswer = q.CorrectAnswer
-        });
+            // 2. Dùng HttpClient tải nội dung file JSON trực tiếp từ Google Drive
+            var jsonResponse = await _httpClient.GetStringAsync(lesson.DriveUrl);
 
-        return Ok(result);
+            // 3. Trả thẳng chuỗi JSON đó về cho Frontend (React)
+            return Content(jsonResponse, "application/json");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi tải dữ liệu từ Google Drive", error = ex.Message });
+        }
     }
 }
