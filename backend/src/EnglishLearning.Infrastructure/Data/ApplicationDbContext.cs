@@ -12,7 +12,8 @@ namespace EnglishLearning.Infrastructure.Data
         public DbSet<Lesson> Lessons { get; set; }
         // 👉 Thêm DbSet cho bảng Questions vào đây
         public DbSet<Question> Questions { get; set; }
-
+        public DbSet<DailyVocabPack> DailyVocabPacks { get; set; }
+        public DbSet<UserLearnedVocab> UserLearnedVocabs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

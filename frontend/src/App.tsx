@@ -5,6 +5,11 @@ import ProtectedRoute from './features/auth/ProtectedRoute';
 import DashboardPage from './features/dashboard/DashboardPage';
 import MainLayout from './layouts/MainLayout';
 import QuizPage from './features/quiz/QuizPage';
+
+// 👉 1. Import 2 Component tính năng mới vào đây
+import { DailyTasks } from './features/tasks/DailyTasks';
+import { Leaderboard } from './features/leaderboard/leaderboard';
+
 import './index.css';
 
 function App() {
@@ -17,9 +22,13 @@ function App() {
         <Route path="/register" element={<RegisterForm />} />
         
         <Route element={<ProtectedRoute />}>
-          {/* Khu vực giao diện chính có Sidebar */}
+          {/* Các trang hiển thị bên trong khung giao diện chung MainLayout (có Navbar/Sidebar) */}
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            
+            {/* 👉 2. Thêm 2 đường dẫn mới vào đây */}
+            <Route path="/daily-tasks" element={<DailyTasks />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
           </Route>
           
           {/* Đường dẫn tới trang làm bài kiểm tra */}

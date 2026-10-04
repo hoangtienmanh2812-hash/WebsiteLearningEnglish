@@ -27,7 +27,7 @@ export default function LoginForm() {
     setIsSubmitting(true);
 
     try {
-            if (email.trim().toLowerCase() === 'admin@gmail.com' && password === '12345678') {
+      if (email.trim().toLowerCase() === 'admin@gmail.com' && password === '12345678') {
         const payload = btoa(JSON.stringify({ sub: 'demo-admin', exp: Math.floor(Date.now() / 1000) + 3600 }))
           .replace(/\+/g, '-')
           .replace(/\//g, '_')

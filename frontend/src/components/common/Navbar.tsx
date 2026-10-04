@@ -2,12 +2,10 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { clearAuthSession, getAuthUser } from '../../features/auth/authStorage';
 import './navbar.css';
 
-const pendingNavigation = ['Bài học', 'Từ vựng', 'Bài tập', 'Chatbot'];
-
 export default function Navbar() {
   const navigate = useNavigate();
   const user = getAuthUser();
-  const displayName = user?.fullName.trim() || user?.email || 'Người học';
+  const displayName = user?.fullName?.trim() || user?.email || 'Người học';
   const initial = displayName.charAt(0).toUpperCase();
 
   const handleLogout = () => {
@@ -27,25 +25,26 @@ export default function Navbar() {
           <NavLink className="navbar__link" to="/dashboard" end>
             Trang chủ
           </NavLink>
-          {pendingNavigation.map((label) => (
-            <button
-              className="navbar__link navbar__link--pending"
-              key={label}
-              type="button"
-              disabled
-              title={`${label} sẽ sớm được bổ sung`}
-            >
-              {label}
-            </button>
-          ))}
+
+          <NavLink className="navbar__link" to="/daily-tasks">
+            🎯 Nhiệm vụ hàng ngày
+          </NavLink>
+
+          <NavLink className="navbar__link" to="/leaderboard">
+            🏆 Bảng xếp hạng
+          </NavLink>
+
+          <NavLink className="navbar__link" to="/quiz/1">
+            📝 Bài học & Test
+          </NavLink>
         </nav>
 
         <details className="user-menu">
           <summary className="user-menu__trigger">
             <span className="user-menu__avatar" aria-hidden="true">{initial}</span>
             <span className="user-menu__name">{displayName}</span>
-            <svg viewBox="0 0 20 20" aria-hidden="true">
-              <path d="m6 8 4 4 4-4" />
+            <svg viewBox="0 0 20 20" aria-hidden="true" width="16" height="16">
+              <path d="m6 8 4 4 4-4" stroke="currentColor" strokeWidth="2" fill="none" />
             </svg>
           </summary>
           <div className="user-menu__panel">
@@ -54,8 +53,8 @@ export default function Navbar() {
               {user?.email && <span>{user.email}</span>}
             </p>
             <button className="user-menu__logout" type="button" onClick={handleLogout}>
-              <svg viewBox="0 0 20 20" aria-hidden="true">
-                <path d="M8 4H4.7A1.7 1.7 0 0 0 3 5.7v8.6A1.7 1.7 0 0 0 4.7 16H8m4-4H3m6-3 3 3-3 3" />
+              <svg viewBox="0 0 20 20" aria-hidden="true" width="16" height="16">
+                <path d="M8 4H4.7A1.7 1.7 0 0 0 3 5.7v8.6A1.7 1.7 0 0 0 4.7 16H8m4-4H3m6-3 3 3-3 3" stroke="currentColor" strokeWidth="2" fill="none" />
               </svg>
               Đăng xuất
             </button>
