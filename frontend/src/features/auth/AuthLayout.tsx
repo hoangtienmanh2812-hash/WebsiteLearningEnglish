@@ -8,8 +8,7 @@ type AuthLayoutProps = {
 function Brand({ mobile = false }: { mobile?: boolean }) {
   return (
     <a className={`brand ${mobile ? 'brand--mobile' : ''}`} href="/login" aria-label="English Learning">
-      <span className="brand__mark" aria-hidden="true">E</span>
-      <span>English Learning</span>
+      
     </a>
   );
 }
@@ -21,38 +20,13 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         <Brand />
 
         <div className="auth-visual__copy">
-          <span className="eyebrow">HỌC MỖI NGÀY, GIỎI MỖI NGÀY</span>
-          <h1>Chạm tới sự tự tin khi dùng tiếng Anh.</h1>
+          <h2>Học tiếng anh mỗi ngày</h2>
+          <h1>Chạm tới sự tự tin khi dùng Tiếng Anh</h1>
           <p>
             Bài học ngắn gọn, lộ trình dành riêng cho bạn và cảm hứng để duy trì mỗi ngày.
           </p>
         </div>
 
-        <div className="learning-scene" aria-hidden="true">
-          <div className="scene-orbit scene-orbit--one" />
-          <div className="scene-orbit scene-orbit--two" />
-          <div className="scene-spark scene-spark--one">✦</div>
-          <div className="scene-spark scene-spark--two">✦</div>
-          <div className="word-card word-card--hello">
-            <span>Hello</span>
-            <small>/həˈləʊ/</small>
-          </div>
-          <div className="word-card word-card--great">Great job!</div>
-          <div className="book-stack">
-            <div className="book-stack__page" />
-            <div className="book-stack__cover">
-              <span>Aa</span>
-              <strong>ENGLISH</strong>
-              <i />
-            </div>
-          </div>
-          <div className="scene-badge">
-            <span>✓</span>
-            <p><strong>Ngày 12</strong> giữ chuỗi học</p>
-          </div>
-        </div>
-
-        <p className="auth-quote">“Một bước nhỏ mỗi ngày tạo nên thay đổi lớn.”</p>
       </section>
 
       <section className="auth-content">
