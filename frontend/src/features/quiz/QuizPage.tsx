@@ -10,6 +10,10 @@ interface Question {
   correctAnswer: string;
 }
 
+type Attachment =
+  | { kind: 'text'; content: string }
+  | { kind: 'audio' | 'document'; url: string };
+
 export default function QuizPage() {
   const navigate = useNavigate();
   const { id } = useParams(); // Lấy ID bài học từ URL (ví dụ: /quiz/1 thì id = '1')
@@ -22,11 +26,19 @@ export default function QuizPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
+  const [attachmentPath, setAttachmentPath] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
+  const [attachmentLoading, setAttachmentLoading] = useState(false);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchQuestions() {
       try {
         setLoading(true);
+        setAttachmentPath(null);
+        setAttachment(null);
+        setAttachmentLoading(false);
+        setAttachmentError(null);
         // Gọi đúng cổng HTTP http://localhost:5219
         const response = await fetch(`http://localhost:5219/api/quiz/${id}`);
         if (!response.ok) {
@@ -41,6 +53,7 @@ export default function QuizPage() {
             "4": string;
             "correct-ans": string;
           }>;
+          file_dinh_kem?: string;
         };
         if (!Array.isArray(data.questions)) {
           throw new Error('Dữ liệu câu hỏi không đúng định dạng');
@@ -55,8 +68,14 @@ export default function QuizPage() {
             correctAnswer: options[Number(item["correct-ans"]) - 1] ?? "",
           };
         }));
+        setAttachmentPath(
+          typeof data.file_dinh_kem === 'string' && data.file_dinh_kem.trim()
+            ? `http://localhost:5219/api/quiz/${id}/attachment`
+            : null,
+        );
       } catch (error) {
         console.error('Lỗi khi gọi API:', error);
+        setAttachmentPath(null);
       } finally {
         setLoading(false);
       }
@@ -64,6 +83,60 @@ export default function QuizPage() {
 
     fetchQuestions();
   }, [id]);
+
+  useEffect(() => {
+    if (!attachmentPath) {
+      return;
+    }
+
+    const path = attachmentPath;
+    const controller = new AbortController();
+    let objectUrl: string | null = null;
+
+    async function fetchAttachment() {
+      try {
+        setAttachmentLoading(true);
+        setAttachment(null);
+        setAttachmentError(null);
+
+        const response = await fetch(path, { signal: controller.signal });
+        if (!response.ok) {
+          throw new Error('Không thể tải file đọc/nghe đính kèm.');
+        }
+
+        const contentType = response.headers.get('content-type')?.split(';')[0].trim().toLowerCase() ?? '';
+        if (contentType.startsWith('audio/')) {
+          objectUrl = URL.createObjectURL(await response.blob());
+          setAttachment({ kind: 'audio', url: objectUrl });
+        } else if (contentType === 'application/pdf') {
+          objectUrl = URL.createObjectURL(await response.blob());
+          setAttachment({ kind: 'document', url: objectUrl });
+        } else if (contentType.startsWith('text/')) {
+          setAttachment({ kind: 'text', content: await response.text() });
+        } else {
+          throw new Error(`Định dạng file chưa được hỗ trợ để hiển thị (${contentType || 'không xác định'}).`);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name !== 'AbortError') {
+          setAttachmentError(error.message);
+          console.error('Lỗi khi tải file đính kèm:', error);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setAttachmentLoading(false);
+        }
+      }
+    }
+
+    fetchAttachment();
+
+    return () => {
+      controller.abort();
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [attachmentPath]);
 
   // Hàm gọi API báo hoàn thành bài học khi user bấm kết thúc
   const markLessonAsCompleted = async () => {
@@ -156,6 +229,26 @@ export default function QuizPage() {
       </header>
 
       <main className="quiz-content">
+        {(attachmentPath || attachmentLoading || attachmentError) && (
+          <section className="quiz-attachment" aria-label="Tài liệu bài học">
+            <h3 className="attachment-title">
+              {attachment?.kind === 'audio' ? 'Bài nghe' : 'Bài đọc'}
+            </h3>
+            {attachmentLoading && <p className="attachment-status">Đang tải tài liệu...</p>}
+            {attachmentError && <p className="attachment-error">{attachmentError}</p>}
+            {attachment?.kind === 'text' && (
+              <div className="reading-passage">{attachment.content}</div>
+            )}
+            {attachment?.kind === 'audio' && (
+              <audio className="listening-audio" controls preload="metadata" src={attachment.url}>
+                Trình duyệt của bạn không hỗ trợ phát âm thanh.
+              </audio>
+            )}
+            {attachment?.kind === 'document' && (
+              <iframe className="reading-document" title="Tài liệu bài đọc" src={attachment.url} />
+            )}
+          </section>
+        )}
         <h2 className="question-title">{currentQuestion.question}</h2>
         
         <div className="options-grid">
