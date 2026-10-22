@@ -5,8 +5,9 @@ import ProtectedRoute from './features/auth/ProtectedRoute';
 import DashboardPage from './features/dashboard/DashboardPage';
 import MainLayout from './layouts/MainLayout';
 import QuizPage from './features/quiz/QuizPage';
+import TestsPage from './features/test/TestsPage';
+import TestPage from './features/test/TestPage'; // 👉 1. Import TestPage vào đây
 
-// 👉 1. Import 2 Component tính năng mới vào đây
 import { DailyTasks } from './features/tasks/DailyTasks';
 import { Leaderboard } from './features/leaderboard/leaderboard';
 
@@ -16,7 +17,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
@@ -25,14 +25,16 @@ function App() {
           {/* Các trang hiển thị bên trong khung giao diện chung MainLayout (có Navbar/Sidebar) */}
           <Route element={<MainLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            
-            {/* 👉 2. Thêm 2 đường dẫn mới vào đây */}
             <Route path="/daily-tasks" element={<DailyTasks />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/tests" element={<TestsPage />} />
           </Route>
           
-          {/* Đường dẫn tới trang làm bài kiểm tra */}
+          {/* Đường dẫn tới trang quiz từ vựng cũ */}
           <Route path="/quiz/:id" element={<QuizPage />} />
+
+          {/* 👉 2. Thêm route trỏ tới giao diện Test tổng hợp mới */}
+          <Route path="/test/:id" element={<TestPage />} />
         </Route>
         
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

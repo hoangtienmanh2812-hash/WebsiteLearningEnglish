@@ -5,6 +5,7 @@ import './dashboard.css';
 
 interface LessonProgress {
   lessonId: number;
+  title: string;
   isUnlocked: boolean;
   isCompleted: boolean;
 }
@@ -38,7 +39,7 @@ export default function DashboardPage() {
         })
         .catch((err) => console.error("Lỗi khi tải tiến độ học:", err));
     }
-  }, [user]);
+  }, [user?.id]);
 
   return (
     <section className="dashboard" aria-labelledby="dashboard-title">
@@ -75,39 +76,31 @@ export default function DashboardPage() {
         <h3 className="section-title">TIẾN ĐỘ HÀNH TRÌNH CỦA BẠN</h3>
         
         <div className="path-container">
-          <svg className="path-svg" viewBox="0 0 2000 150" preserveAspectRatio="none">
-            <path d="M 50 75 Q 150 150 250 75 T 450 75 T 650 75 T 850 75 T 1050 75 T 1250 75 T 1450 75 T 1650 75 T 1850 75" 
-                fill="none" stroke="#e5e7eb" strokeWidth="8" strokeLinecap="round"/>
-          </svg>
-          
           <div className="nodes-row">
-            {Array.from({ length: 10 }, (_, index) => {
-              const lessonId = index + 1;
-              const progress = lessonsProgress.find((p) => p.lessonId === lessonId);
-              const isUnlocked = lessonId === 1 ? true : (progress ? progress.isUnlocked : false);
-              const isCompleted = progress ? progress.isCompleted : false;
-              
-              const isUp = lessonId % 2 !== 0;
-              const nodeClass = `node ${isUp ? 'up' : 'down'} ${isCompleted ? 'completed' : ''} ${isUnlocked ? 'active' : 'locked'}`;
+            {lessonsProgress.map((progress, index) => {
+              const lessonId = progress.lessonId;
+              const isUnlocked = progress.isUnlocked;
+              const isCompleted = progress.isCompleted;
+              const displayTitle = progress.title.replace(/^Bài\s*\d+\s*:?\s*/i, '') || `Bài ${index + 1}`;
+              const nodeClass = `node ${isCompleted ? 'completed' : ''} ${isUnlocked ? 'unlocked' : 'locked'}`;
 
               return (
-                <div 
+                <button
+                  type="button"
                   key={lessonId}
                   className={nodeClass}
+                  disabled={!isUnlocked}
+                  aria-label={`${progress.title}. ${isCompleted ? 'Đã hoàn thành' : isUnlocked ? 'Sẵn sàng học' : 'Chưa mở khóa'}`}
                   onClick={() => {
-                    if (isUnlocked) {
-                      navigate(`/quiz/${lessonId}`);
-                    } else {
-                      alert("Bạn cần hoàn thành bài học trước để mở khóa bài này!");
-                    }
+                    navigate(`/quiz/${lessonId}`);
                   }}
-                  style={{ cursor: isUnlocked ? 'pointer' : 'not-allowed', opacity: isUnlocked ? 1 : 0.5 }}
                 >
                   <div className="circle">
-                    {isUnlocked ? lessonIcons[index] : '🔒'}
+                    {isCompleted ? '✓' : isUnlocked ? lessonIcons[index % lessonIcons.length] : '🔒'}
                   </div>
-                  <span>{lessonId === 10 ? 'Thưởng' : `Bài ${lessonId}`}</span>
-                </div>
+                  <span className="node__order">Bài {index + 1}</span>
+                  <span className="node__title">{displayTitle}</span>
+                </button>
               );
             })}
           </div>

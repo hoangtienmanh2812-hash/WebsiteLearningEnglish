@@ -21,13 +21,19 @@ public class QuizController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetQuiz(int id)
+    public async Task<IActionResult> GetQuiz(int id, [FromQuery] string? lessonType)
     {
         // 1. Tìm bài học trong cơ sở dữ liệu SQL Server theo ID
         var lesson = await _context.Lessons.FindAsync(id);
         if (lesson == null || string.IsNullOrEmpty(lesson.DriveUrl))
         {
             return NotFound(new { message = "Không tìm thấy bài học hoặc chưa có link dữ liệu!" });
+        }
+
+        if (!string.IsNullOrWhiteSpace(lessonType) &&
+            !string.Equals(lesson.LessonType, lessonType, StringComparison.OrdinalIgnoreCase))
+        {
+            return NotFound(new { message = "Nội dung không thuộc loại được yêu cầu." });
         }
 
         try

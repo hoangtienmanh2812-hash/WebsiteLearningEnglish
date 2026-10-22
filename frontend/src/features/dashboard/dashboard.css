@@ -392,3 +392,114 @@
   border-color: #ffc800;
   box-shadow: 0 5px 0 #d9a000;
 }
+
+/* Thanh tiến trình tự co giãn theo số lesson thực tế. */
+.path-container {
+  overflow-x: auto;
+  padding: 18px 0 26px;
+  scrollbar-width: thin;
+}
+
+.nodes-row {
+  --node-gap: clamp(34px, 6vw, 86px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 6px 8px;
+  gap: var(--node-gap);
+}
+
+.node {
+  position: relative;
+  display: flex;
+  width: 132px;
+  min-height: 150px;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  transition: transform .18s ease;
+}
+
+.node:not(:last-child)::after {
+  position: absolute;
+  top: 42px;
+  left: calc(50% + 38px);
+  width: calc(100% + var(--node-gap) - 76px);
+  height: 6px;
+  border-radius: 99px;
+  content: '';
+  background: #e2e8f0;
+}
+
+.node.completed:not(:last-child)::after { background: #86efac; }
+.node:hover:not(:disabled) { transform: translateY(-5px); }
+.node:focus-visible { outline: 3px solid #93c5fd; outline-offset: 6px; border-radius: 16px; }
+.node:disabled { cursor: not-allowed; }
+
+.circle {
+  z-index: 1;
+  width: 76px;
+  height: 76px;
+  margin: 0 0 13px;
+  border: 5px solid #dbe3ed;
+  background: #f1f5f9;
+  box-shadow: 0 5px 0 #cbd5e1;
+  color: #94a3b8;
+  font-size: 31px;
+}
+
+.node.unlocked .circle {
+  border-color: #bfdbfe;
+  background: #dbeafe;
+  box-shadow: 0 5px 0 #93c5fd, 0 0 0 4px #eff6ff;
+  color: #1d4ed8;
+}
+
+.node.completed .circle {
+  border-color: #4ade80;
+  background: #22c55e;
+  box-shadow: 0 5px 0 #16a34a, 0 0 0 4px #dcfce7;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 900;
+}
+
+.node .node__order,
+.node .node__title {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.node .node__order {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.node .node__title {
+  margin-top: 3px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.node.locked .node__title,
+.node.locked .node__order { color: #94a3b8; }
+
+@media (max-width: 650px) {
+  .nodes-row { --node-gap: 32px; }
+  .node { width: 110px; }
+}

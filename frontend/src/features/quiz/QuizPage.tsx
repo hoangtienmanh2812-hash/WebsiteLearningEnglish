@@ -40,7 +40,7 @@ export default function QuizPage() {
         setAttachmentLoading(false);
         setAttachmentError(null);
         // Gọi đúng cổng HTTP http://localhost:5219
-        const response = await fetch(`http://localhost:5219/api/quiz/${id}`);
+        const response = await fetch(`http://localhost:5219/api/quiz/${id}?lessonType=lesson`);
         if (!response.ok) {
           throw new Error('Không thể tải dữ liệu câu hỏi từ server');
         }

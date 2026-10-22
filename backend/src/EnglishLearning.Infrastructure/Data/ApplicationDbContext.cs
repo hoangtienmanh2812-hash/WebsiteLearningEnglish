@@ -33,6 +33,13 @@ namespace EnglishLearning.Infrastructure.Data
                 entity.Property(e => e.QuestionText).IsRequired();
                 entity.Property(e => e.CorrectAnswer).IsRequired();
             });
+            modelBuilder.Entity<Lesson>(entity =>
+            {
+                entity.Property(e => e.LessonType)
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasDefaultValue("lesson");
+            });
         }
     }
 }

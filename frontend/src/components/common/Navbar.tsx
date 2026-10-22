@@ -34,7 +34,7 @@ export default function Navbar() {
             🏆 Bảng xếp hạng
           </NavLink>
 
-          <NavLink className="navbar__link" to="/quiz/1">
+          <NavLink className="navbar__link" to="/tests">
             📝 Bài học & Test
           </NavLink>
         </nav>

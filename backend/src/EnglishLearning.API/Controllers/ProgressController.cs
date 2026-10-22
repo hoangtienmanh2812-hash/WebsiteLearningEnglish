@@ -25,31 +25,30 @@ public class ProgressController : ControllerBase
                 return BadRequest(new { message = $"UserId không hợp lệ: {userId}" });
             }
 
-            var totalLessons = 10;
+            var lessons = await _context.Lessons
+                .AsNoTracking()
+                .Where(lesson => lesson.LessonType.ToLower() == "lesson")
+                .OrderBy(lesson => lesson.Id)
+                .Select(lesson => new { lesson.Id, lesson.Title })
+                .ToListAsync();
             var userProgresses = await _context.UserProgresses
                 .Where(p => p.UserId == parsedUserId)
                 .ToListAsync();
 
             var result = new List<object>();
 
-            for (int i = 1; i <= totalLessons; i++)
+            for (var index = 0; index < lessons.Count; index++)
             {
-                if (i == 1)
-                {
-                    var isDone = userProgresses.Any(p => p.LessonId == 1 && p.IsCompleted);
-                    result.Add(new { lessonId = 1, isUnlocked = true, isCompleted = isDone });
-                }
-                else
-                {
-                    var previousLessonCompleted = userProgresses.Any(p => p.LessonId == (i - 1) && p.IsCompleted);
-                    var currentLessonDone = userProgresses.Any(p => p.LessonId == i && p.IsCompleted);
-
-                    result.Add(new { 
-                        lessonId = i, 
-                        isUnlocked = previousLessonCompleted, 
-                        isCompleted = currentLessonDone 
-                    });
-                }
+                var lesson = lessons[index];
+                var isDone = userProgresses.Any(progress => progress.LessonId == lesson.Id && progress.IsCompleted);
+                var previousLessonDone = index == 0 || userProgresses.Any(progress =>
+                    progress.LessonId == lessons[index - 1].Id && progress.IsCompleted);
+                result.Add(new {
+                    lessonId = lesson.Id,
+                    title = lesson.Title,
+                    isUnlocked = previousLessonDone,
+                    isCompleted = isDone
+                });
             }
 
             return Ok(result);
@@ -69,6 +68,13 @@ public class ProgressController : ControllerBase
             if (dto == null || dto.UserId == Guid.Empty)
             {
                 return BadRequest(new { message = "Dữ liệu gửi lên không hợp lệ." });
+            }
+
+            var isLesson = await _context.Lessons.AnyAsync(lesson =>
+                lesson.Id == dto.LessonId && lesson.LessonType.ToLower() == "lesson");
+            if (!isLesson)
+            {
+                return BadRequest(new { message = "Chỉ bài học thuộc loại 'lesson' mới được cập nhật tiến độ." });
             }
 
             var progress = await _context.UserProgresses
