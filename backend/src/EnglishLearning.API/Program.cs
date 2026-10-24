@@ -25,16 +25,16 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseMiddleware<EnglishLearning.API.SystemErrorLoggingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-app.UseCors("AllowReactApp");
+
 app.UseHttpsRedirection();
 
-// Dùng CORS policy đã định nghĩa
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();

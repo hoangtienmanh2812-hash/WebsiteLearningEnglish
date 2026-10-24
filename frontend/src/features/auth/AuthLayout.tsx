@@ -5,32 +5,29 @@ type AuthLayoutProps = {
   children: ReactNode;
 };
 
-function Brand({ mobile = false }: { mobile?: boolean }) {
-  return (
-    <a className={`brand ${mobile ? 'brand--mobile' : ''}`} href="/login" aria-label="English Learning">
-      
-    </a>
-  );
-}
-
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
     <main className="auth-page">
-      <section className="auth-visual" aria-label="Học tiếng Anh mỗi ngày">
-        <Brand />
-
+      <section className="auth-visual" aria-label="English Edu">
         <div className="auth-visual__copy">
-          <h2>Học tiếng anh mỗi ngày</h2>
-          <h1>Chạm tới sự tự tin khi dùng Tiếng Anh</h1>
-          <p>
-            Bài học ngắn gọn, lộ trình dành riêng cho bạn và cảm hứng để duy trì mỗi ngày.
-          </p>
+          <h1 className="auth-visual__title">
+            <svg viewBox="0 0 600 200" role="img" aria-labelledby="english-edu-title">
+              <title id="english-edu-title">English Edu</title>
+              <defs>
+                <path id="english-edu-arc" d="M 42 155 Q 300 -30 558 155" />
+              </defs>
+              <text>
+                <textPath href="#english-edu-arc" startOffset="50%" textAnchor="middle">
+                  English Edu
+                </textPath>
+              </text>
+            </svg>
+          </h1>
+          <p>Chinh phục tiếng Anh cùng English Edu</p>
         </div>
-
       </section>
 
       <section className="auth-content">
-        <Brand mobile />
         <div className="auth-card">{children}</div>
       </section>
     </main>

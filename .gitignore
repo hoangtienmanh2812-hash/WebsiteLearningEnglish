@@ -1,0 +1,12 @@
+# .NET build files
+**/bin/
+**/obj/
+
+# Node.js
+node_modules/
+dist/
+
+# Environment files
+.env
+.env.*
+!.env.example

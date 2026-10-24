@@ -7,6 +7,7 @@ export type AuthResponse = {
   email: string;
   fullName: string;
   token: string;
+  isAdmin: boolean;
 };
 
 type ApiError = {

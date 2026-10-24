@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { getAuthUser } from '../auth/authStorage';
+import { getAuthToken, getAuthUser } from '../auth/authStorage';
 
 interface Vocab {
   id: number;
@@ -14,6 +14,7 @@ interface DailyPackResponse {
   title: string;
   vocabularies: Vocab[];
   learnedVocabIds?: number[];
+  xpPerVocabulary: number;
 }
 
 export const DailyTasks = () => {
@@ -25,6 +26,7 @@ export const DailyTasks = () => {
   const [dayNumber, setDayNumber] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [xpPerVocabulary, setXpPerVocabulary] = useState<number | null>(null);
   const userId = getAuthUser()?.id;
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export const DailyTasks = () => {
       try {
         const response = await axios.get<DailyPackResponse>(
           `http://localhost:5219/api/Gamification/daily-vocab-json/${userId}/${dayNumber}`,
+          { headers: authorizationHeaders() },
         );
         if (!Array.isArray(response.data.vocabularies)) {
           throw new Error('Dữ liệu gói từ vựng không đúng định dạng.');
@@ -50,6 +53,7 @@ export const DailyTasks = () => {
         setTitle(response.data.title);
         setVocabs(response.data.vocabularies);
         setLearnedIds(response.data.learnedVocabIds ?? []);
+        setXpPerVocabulary(response.data.xpPerVocabulary);
         setCurrentIndex(0);
         setShowMeaning(false);
       } catch (err) {
@@ -69,7 +73,9 @@ export const DailyTasks = () => {
       return;
     }
 
-    axios.post('http://localhost:5219/api/Gamification/mark-vocab-learned', { userId, dayNumber, vocabId })
+    axios.post('http://localhost:5219/api/Gamification/mark-vocab-learned', { userId, dayNumber, vocabId }, {
+      headers: authorizationHeaders(),
+    })
       .then(() => {
         if (!learnedIds.includes(vocabId)) {
           setLearnedIds(prev => [...prev, vocabId]);
@@ -167,7 +173,7 @@ export const DailyTasks = () => {
             cursor: 'pointer' 
           }}
         >
-          {isCurrentLearned ? '✅ Đã Thuộc' : '✔️ Thuộc Từ Này (+10 EXP)'}
+          {isCurrentLearned ? '✅ Đã Thuộc' : `✔️ Thuộc Từ Này (+${xpPerVocabulary ?? '...'} EXP)`}
         </button>
 
         <button 
@@ -181,3 +187,11 @@ export const DailyTasks = () => {
     </div>
   );
 };
+
+function authorizationHeaders(): { Authorization: string } {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+  }
+  return { Authorization: `Bearer ${token}` };
+}

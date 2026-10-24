@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuthUser } from '../auth/authStorage';
+import { getAuthToken, getAuthUser } from '../auth/authStorage';
 import './dashboard.css';
 
 interface LessonProgress {
@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const user = getAuthUser();
   const navigate = useNavigate();
   const [lessonsProgress, setLessonsProgress] = useState<LessonProgress[]>([]);
+  const [streakMessage, setStreakMessage] = useState('');
 
   // Ép kiểu user.fullName để tránh lỗi TypeScript nếu user có thể là null
   const userName = user?.fullName || 'bạn';
@@ -41,9 +42,38 @@ export default function DashboardPage() {
     }
   }, [user?.id]);
 
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!user?.id || !token) return;
+
+    fetch(`http://localhost:5219/api/Gamification/checkin-streak/${user.id}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error('Không thể ghi nhận điểm danh streak hôm nay.');
+        }
+        const result = await response.json() as { streakCount: number; xpReward: number };
+        if (result.xpReward > 0) {
+          setStreakMessage(`Điểm danh thành công: streak ${result.streakCount} ngày, +${result.xpReward} EXP.`);
+        }
+      })
+      .catch((caughtError: unknown) => {
+        setStreakMessage(caughtError instanceof Error
+          ? caughtError.message
+          : 'Không thể ghi nhận điểm danh streak hôm nay.');
+      });
+  }, [user?.id]);
+
   return (
     <section className="dashboard" aria-labelledby="dashboard-title">
       <p className="dashboard__date">{today}</p>
+      {streakMessage && (
+        <p className="dashboard-hero__note" role={streakMessage.startsWith('Không thể') ? 'alert' : 'status'}>
+          {streakMessage}
+        </p>
+      )}
 
       <div className="dashboard-hero">
         <div className="dashboard-hero__copy">

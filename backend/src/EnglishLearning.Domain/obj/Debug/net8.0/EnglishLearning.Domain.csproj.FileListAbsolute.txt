@@ -5,8 +5,14 @@ D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\En
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.AssemblyInfoInputs.cache
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.AssemblyInfo.cs
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.csproj.CoreCompileInputs.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.sourcelink.json
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\refint\EnglishLearning.Domain.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.pdb
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\ref\EnglishLearning.Domain.dll
-D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Domain\obj\Debug\net8.0\EnglishLearning.Domain.sourcelink.json
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Domain.deps.json
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Domain.dll
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Domain.pdb
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Domain.deps.json
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Domain.dll
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Domain.pdb

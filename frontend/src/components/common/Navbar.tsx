@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { clearAuthSession, getAuthUser } from '../../features/auth/authStorage';
+import { clearAuthSession, getAuthUser, isAdmin } from '../../features/auth/authStorage';
 import './navbar.css';
 
 export default function Navbar() {
@@ -37,6 +37,21 @@ export default function Navbar() {
           <NavLink className="navbar__link" to="/tests">
             📝 Bài học & Test
           </NavLink>
+          {isAdmin() && (
+            <NavLink className="navbar__link" to="/admin/lessons">
+              🗂️ Quản lý nội dung
+            </NavLink>
+          )}
+          {isAdmin() && (
+            <NavLink className="navbar__link" to="/admin/users">
+              👥 Quản lý người dùng
+            </NavLink>
+          )}
+          {isAdmin() && (
+            <NavLink className="navbar__link" to="/admin/system">
+              ⚙️ Quản lý hệ thống
+            </NavLink>
+          )}
         </nav>
 
         <details className="user-menu">

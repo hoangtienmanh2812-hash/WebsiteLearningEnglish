@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { getAuthToken } from '../auth/authStorage';
 import './TestPage.css';
 
 interface Question {
@@ -31,6 +32,9 @@ export default function TestPage() {
   const [userAnswers, setUserAnswers] = useState<Record<number, string>>({});
   const [timeLeft, setTimeLeft] = useState(40 * 60);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [xpEarned, setXpEarned] = useState(0);
+  const [xpError, setXpError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -40,6 +44,9 @@ export default function TestPage() {
         setLoading(true);
         setError(null);
         setSubmitted(false);
+        setIsSubmitting(false);
+        setXpEarned(0);
+        setXpError(null);
         setUserAnswers({});
         setCurrentQuestion(0);
         setTimeLeft(40 * 60);
@@ -70,13 +77,13 @@ export default function TestPage() {
   }, [id]);
 
   useEffect(() => {
-    if (loading || error || submitted || timeLeft === 0) return;
+    if (loading || error || submitted || isSubmitting || timeLeft === 0) return;
 
     const timer = window.setInterval(() => {
       setTimeLeft((previous) => Math.max(previous - 1, 0));
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [loading, error, submitted, timeLeft]);
+  }, [loading, error, submitted, isSubmitting, timeLeft]);
 
   const questions = testData?.questions ?? [];
   const answeredCount = Object.keys(userAnswers).length;
@@ -85,9 +92,57 @@ export default function TestPage() {
   ), 0);
 
   const selectAnswer = (questionIndex: number, answer: string) => {
-    if (submitted || timeLeft === 0) return;
+    if (submitted || isSubmitting || timeLeft === 0) return;
     setUserAnswers((previous) => ({ ...previous, [questionIndex]: answer }));
   };
+
+  const submitTest = async () => {
+    setIsSubmitting(true);
+    setXpError(null);
+    const token = getAuthToken();
+    if (!token) {
+      setXpError('Đăng nhập lại để nhận EXP cho câu trả lời đúng.');
+      setSubmitted(true);
+      setIsSubmitting(false);
+      return;
+    }
+
+    let earned = 0;
+    let hasFailure = false;
+    for (const [index, answer] of Object.entries(userAnswers)) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/quiz/${id ?? '1'}/answers/${index}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ answer }),
+        });
+        if (!response.ok) {
+          hasFailure = true;
+          continue;
+        }
+        const result = await response.json() as { awarded: boolean; xpReward: number };
+        if (result.awarded) earned += result.xpReward;
+      } catch {
+        hasFailure = true;
+      }
+    }
+
+    setXpEarned(earned);
+    if (hasFailure) {
+      setXpError('Một số câu trả lời chưa thể xác minh EXP. Hãy kiểm tra kết nối và thử lại sau.');
+    }
+    setSubmitted(true);
+    setIsSubmitting(false);
+  };
+
+  useEffect(() => {
+    if (timeLeft === 0 && !submitted && !isSubmitting && answeredCount > 0) {
+      void submitTest();
+    }
+  }, [timeLeft, submitted, isSubmitting, answeredCount]);
 
   if (loading) {
     return <main className="test-page-container test-state"><p>Đang tải bài kiểm tra...</p></main>;
@@ -109,6 +164,8 @@ export default function TestPage() {
       <main className="test-page-container test-state">
         <h1>{timeLeft === 0 ? 'Đã hết giờ' : 'Đã nộp bài'}</h1>
         <p>Bạn trả lời đúng <strong>{score}/{questions.length}</strong> câu.</p>
+        <p>EXP nhận được trong lượt này: <strong>{xpEarned}</strong></p>
+        {xpError && <p role="alert">{xpError}</p>}
         <button type="button" className="test-button" onClick={() => navigate('/dashboard')}>
           Quay lại lộ trình
         </button>
@@ -175,8 +232,8 @@ export default function TestPage() {
               </button>
             ))}
           </div>
-          <button type="button" className="test-button submit" onClick={() => setSubmitted(true)}>
-            Nộp bài
+          <button type="button" className="test-button submit" onClick={() => { void submitTest(); }} disabled={isSubmitting}>
+            {isSubmitting ? 'Đang chấm bài...' : 'Nộp bài'}
           </button>
         </aside>
       </div>

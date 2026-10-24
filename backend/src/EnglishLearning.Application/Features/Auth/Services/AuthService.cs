@@ -38,6 +38,12 @@ namespace EnglishLearning.Application.Features.Auth.Services
                 CreatedAt = DateTime.UtcNow
             };
 
+            if (_jwtProvider.IsAdmin(user))
+            {
+                throw new InvalidOperationException(
+                    "Tài khoản quản trị cần được tạo riêng trước khi đăng nhập.");
+            }
+
             await _userRepository.AddAsync(user);
 
             // Generate token
@@ -48,7 +54,8 @@ namespace EnglishLearning.Application.Features.Auth.Services
                 UserId = user.Id,
                 Email = user.Email,
                 FullName = user.FullName,
-                Token = token
+                Token = token,
+                IsAdmin = _jwtProvider.IsAdmin(user)
             };
         }
 
@@ -67,9 +74,9 @@ namespace EnglishLearning.Application.Features.Auth.Services
                 UserId = user.Id,
                 Email = user.Email,
                 FullName = user.FullName,
-                Token = token
+                Token = token,
+                IsAdmin = _jwtProvider.IsAdmin(user)
             };
         }
     }
 }
-

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAuthUser } from '../auth/authStorage';
+import { getAuthToken, getAuthUser } from '../auth/authStorage';
 import './quiz.css';
 
 interface Question {
@@ -30,6 +30,8 @@ export default function QuizPage() {
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attachmentLoading, setAttachmentLoading] = useState(false);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [xpEarned, setXpEarned] = useState(0);
+  const [xpError, setXpError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -141,20 +143,61 @@ export default function QuizPage() {
   // Hàm gọi API báo hoàn thành bài học khi user bấm kết thúc
   const markLessonAsCompleted = async () => {
     if (!user?.id || !id) return;
+    const token = getAuthToken();
+    if (!token) {
+      setXpError('Đăng nhập lại để nhận EXP hoàn thành bài học.');
+      return;
+    }
 
     try {
-      await fetch('http://localhost:5219/api/progress/complete', {
+      const response = await fetch('http://localhost:5219/api/progress/complete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           userId: user.id,
           lessonId: Number(id), // Gửi đúng số thứ tự bài học hiện tại lên để mở khóa bài tiếp theo
         }),
       });
+      if (!response.ok) {
+        throw new Error('Không thể ghi nhận EXP hoàn thành bài học.');
+      }
+      const result = await response.json() as { xpReward?: number };
+      setXpEarned((previous) => previous + (result.xpReward ?? 0));
     } catch (err) {
       console.error('Lỗi cập nhật tiến độ:', err);
+      setXpError(err instanceof Error ? err.message : 'Không thể ghi nhận EXP hoàn thành bài học.');
+    }
+  };
+
+  const submitCorrectAnswerForXp = async (questionIndex: number, answerIndex: number) => {
+    const token = getAuthToken();
+    if (!user?.id || !token || !id) {
+      setXpError('Đăng nhập lại để nhận EXP cho câu trả lời đúng.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5219/api/quiz/${id}/answers/${questionIndex}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ answer: String(answerIndex + 1) }),
+      });
+      if (!response.ok) {
+        throw new Error('Không thể xác minh EXP cho câu trả lời.');
+      }
+      const result = await response.json() as { awarded: boolean; xpReward: number };
+      if (result.awarded) {
+        setXpEarned((previous) => previous + result.xpReward);
+      }
+    } catch (err) {
+      console.error('Lỗi xác minh câu trả lời:', err);
+      setXpError(err instanceof Error ? err.message : 'Không thể xác minh EXP cho câu trả lời.');
     }
   };
 
@@ -180,10 +223,14 @@ export default function QuizPage() {
   const currentQuestion = questions[currentIdx];
   const progressPercent = (currentIdx / questions.length) * 100;
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     setIsSubmitted(true);
     if (selectedOption === currentQuestion.correctAnswer) {
       setScore(score + 1);
+      await submitCorrectAnswerForXp(
+        currentIdx,
+        currentQuestion.options.indexOf(selectedOption),
+      );
     }
   };
 
@@ -208,6 +255,8 @@ export default function QuizPage() {
           <p className="result-stats">
             Bạn đã trả lời đúng <strong>{score}/{questions.length}</strong> câu hỏi.
           </p>
+          <p className="result-stats">EXP nhận được trong lượt này: <strong>{xpEarned}</strong></p>
+          {xpError && <p role="alert">{xpError}</p>}
           <div className="result-actions">
             <button className="action-btn" onClick={() => navigate('/dashboard')}>
               Quay lại lộ trình

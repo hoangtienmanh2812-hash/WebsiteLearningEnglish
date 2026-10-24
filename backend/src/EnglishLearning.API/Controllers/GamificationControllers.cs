@@ -5,8 +5,11 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using EnglishLearning.Application.DTOs;
+using EnglishLearning.Application.Features.Admin.Interfaces;
 using EnglishLearning.Domain.Entities;
 using EnglishLearning.Infrastructure.Data;
 
@@ -18,11 +21,16 @@ namespace EnglishLearning.API.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly ISystemSettingsService _systemSettingsService;
 
-        public GamificationController(ApplicationDbContext context, IHttpClientFactory httpClientFactory)
+        public GamificationController(
+            ApplicationDbContext context,
+            IHttpClientFactory httpClientFactory,
+            ISystemSettingsService systemSettingsService)
         {
             _context = context;
             _httpClientFactory = httpClientFactory;
+            _systemSettingsService = systemSettingsService;
         }
 
         // 1. API ĐỌC TỪ VỰNG TỪ FILE JSON CỦA NGÀY HỌC
@@ -55,7 +63,9 @@ namespace EnglishLearning.API.Controllers
                     dayNumber = pack.DayNumber,
                     title = pack.Title,
                     learnedVocabIds = learnedIds,
-                    vocabularies = vocabList
+                    vocabularies = vocabList,
+                    xpPerVocabulary = await _systemSettingsService.GetXpRewardAsync(
+                        SystemSettingsService.VocabularyLearnedXpKey)
                 });
             }
             catch (Exception ex)
@@ -64,35 +74,60 @@ namespace EnglishLearning.API.Controllers
             }
         }
 
-        // 2. API ĐÁNH DẤU THUỘC TỪ VỰNG (+10 EXP)
+        // 2. API ĐÁNH DẤU THUỘC TỪ VỰNG
+        [Authorize]
         [HttpPost("mark-vocab-learned")]
-        public async Task<IActionResult> MarkVocabLearned([FromBody] MarkVocabLearnedRequest req)
+        public async Task<IActionResult> MarkVocabLearned(
+            [FromBody] MarkVocabLearnedRequest req,
+            CancellationToken cancellationToken)
         {
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (!Guid.TryParse(userIdValue, out var authenticatedUserId))
+            {
+                return Unauthorized(new { message = "Không xác định được tài khoản hiện tại." });
+            }
+            if (req.UserId != authenticatedUserId || req.DayNumber <= 0 || req.VocabId <= 0)
+            {
+                return BadRequest(new { message = "Dữ liệu từ vựng không hợp lệ." });
+            }
+
             var today = DateTime.UtcNow.Date;
 
             var existing = await _context.UserLearnedVocabs
-                .FirstOrDefaultAsync(uv => uv.UserId == req.UserId && uv.DayNumber == req.DayNumber && uv.VocabId == req.VocabId);
+                .FirstOrDefaultAsync(uv => uv.UserId == authenticatedUserId && uv.DayNumber == req.DayNumber && uv.VocabId == req.VocabId, cancellationToken);
+            var xpReward = 0;
 
             if (existing == null)
             {
+                var user = await _context.Users.FindAsync(new object?[] { authenticatedUserId }, cancellationToken);
+                if (user is null)
+                {
+                    return NotFound(new { message = "Không tìm thấy người dùng." });
+                }
+
                 _context.UserLearnedVocabs.Add(new UserLearnedVocab
                 {
-                    UserId = req.UserId,
+                    UserId = authenticatedUserId,
                     DayNumber = req.DayNumber,
                     VocabId = req.VocabId,
                     LearnedDate = today
                 });
 
-                var user = await _context.Users.FindAsync(req.UserId);
-                if (user != null)
-                {
-                    user.Exp += 10;
-                }
+                xpReward = await _systemSettingsService.GetXpRewardAsync(
+                    SystemSettingsService.VocabularyLearnedXpKey,
+                    cancellationToken);
+                user.Exp += xpReward;
 
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
             }
 
-            return Ok(new { message = "Đã đánh dấu thuộc từ vựng! +10 EXP" });
+            return Ok(new
+            {
+                message = existing is null
+                    ? $"Đã đánh dấu thuộc từ vựng! +{xpReward} EXP"
+                    : "Từ vựng này đã được ghi nhận trước đó.",
+                xpReward
+            });
         }
 
         // 3. API BẢNG XẾP HẠNG TOP 10 EXP
@@ -115,31 +150,46 @@ namespace EnglishLearning.API.Controllers
         }
 
         // 4. API ĐIỂM DANH STREAK HÀNG NGÀY
+        [Authorize]
         [HttpPost("checkin-streak/{userId}")]
         public async Task<IActionResult> CheckInStreak(Guid userId)
         {
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (!Guid.TryParse(userIdValue, out var authenticatedUserId) || authenticatedUserId != userId)
+            {
+                return Forbid();
+            }
+
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound();
 
             var today = DateTime.UtcNow.Date;
+            var xpReward = 0;
+            var checkedInToday = user.LastLoginDate?.Date == today;
 
-            if (user.LastLoginDate == null)
+            if (!checkedInToday && user.LastLoginDate == null)
             {
                 user.StreakCount = 1;
             }
-            else if (user.LastLoginDate.Value.Date == today.AddDays(-1))
+            else if (!checkedInToday && user.LastLoginDate!.Value.Date == today.AddDays(-1))
             {
                 user.StreakCount += 1;
             }
-            else if (user.LastLoginDate.Value.Date < today.AddDays(-1))
+            else if (!checkedInToday && user.LastLoginDate!.Value.Date < today.AddDays(-1))
             {
                 user.StreakCount = 1;
             }
 
-            user.LastLoginDate = today;
+            if (!checkedInToday)
+            {
+                xpReward = await _systemSettingsService.GetXpRewardAsync(
+                    SystemSettingsService.DailyStreakXpKey);
+                user.Exp += xpReward;
+                user.LastLoginDate = today;
+            }
             await _context.SaveChangesAsync();
 
-            return Ok(new { user.StreakCount, user.Exp });
+            return Ok(new { user.StreakCount, user.Exp, xpReward });
         }
     }
 }

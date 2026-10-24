@@ -8,9 +8,15 @@ D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.AssemblyInfoInputs.cache
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.AssemblyInfo.cs
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.csproj.CoreCompileInputs.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.sourcelink.json
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishL.64EE6E81.Up2Date
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\refint\EnglishLearning.Application.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.pdb
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\ref\EnglishLearning.Application.dll
-D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Application\obj\Debug\net8.0\EnglishLearning.Application.sourcelink.json
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Application.deps.json
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Application.dll
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Application.pdb
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Application.deps.json
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Application.dll
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Application.pdb

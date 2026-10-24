@@ -6,5 +6,6 @@ namespace EnglishLearning.Application.Features.Auth.DTOs
         public string Email { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
+        public bool IsAdmin { get; set; }
     }
 }

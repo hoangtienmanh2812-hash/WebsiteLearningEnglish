@@ -7,6 +7,7 @@ export type AuthUser = {
   id: string;
   email: string;
   fullName: string;
+  isAdmin: boolean;
 };
 
 type JwtPayload = {
@@ -64,6 +65,7 @@ export function getAuthUser(): AuthUser | null {
       id: typeof user.id === 'string' ? user.id : '',
       email: user.email,
       fullName: user.fullName,
+      isAdmin: user.isAdmin === true,
     };
   } catch {
     return null;
@@ -79,7 +81,16 @@ export function saveAuthSession(response: AuthResponse, persist: boolean): void 
     id: response.userId,
     email: response.email,
     fullName: response.fullName,
+    isAdmin: response.isAdmin === true,
   } satisfies AuthUser));
+}
+
+export function getAuthToken(): string | null {
+  return getActiveStorage()?.getItem(TOKEN_KEY) ?? null;
+}
+
+export function isAdmin(): boolean {
+  return getAuthUser()?.isAdmin === true;
 }
 
 export function clearAuthSession(): void {

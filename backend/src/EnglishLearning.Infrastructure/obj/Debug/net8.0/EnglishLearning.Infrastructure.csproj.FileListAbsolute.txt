@@ -10,9 +10,15 @@ D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\n
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.AssemblyInfoInputs.cache
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.AssemblyInfo.cs
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.csproj.CoreCompileInputs.cache
+D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.sourcelink.json
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishL.A47EF1B1.Up2Date
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\refint\EnglishLearning.Infrastructure.dll
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.pdb
 D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\ref\EnglishLearning.Infrastructure.dll
-D:\WebsiteLearningEnglish\backend\src\EnglishLearning.Infrastructure\obj\Debug\net8.0\EnglishLearning.Infrastructure.sourcelink.json
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Infrastructure.deps.json
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Infrastructure.dll
+C:\Users\manha\AppData\Local\Temp\EnglishLearning.ApiBuild\EnglishLearning.Infrastructure.pdb
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Infrastructure.deps.json
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Infrastructure.dll
+C:\Users\manha\AppData\Local\Temp\WebsiteLearningEnglish-Verification\Debug\net8.0\EnglishLearning.Infrastructure.pdb

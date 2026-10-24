@@ -1,3 +1,9 @@
+.main-layout__content:has(.dashboard) {
+  background:
+    linear-gradient(rgb(255 249 251 / 0%), rgb(255 249 251 / 0%)),
+    url('../../assets/Background.jpg') center / cover fixed;
+}
+
 .dashboard {
   color: #25201f;
 }

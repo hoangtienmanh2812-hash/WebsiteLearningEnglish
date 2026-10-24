@@ -11,6 +11,6 @@ namespace EnglishLearning.Domain.Entities
         public int Exp { get; set; } = 0;
         public int StreakCount { get; set; } = 0;
         public DateTime? LastLoginDate { get; set; }
+        public bool IsAdmin { get; set; }
     }
 }
-

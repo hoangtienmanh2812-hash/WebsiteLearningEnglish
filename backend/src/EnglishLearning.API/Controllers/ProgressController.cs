@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using EnglishLearning.Infrastructure.Data;
+using EnglishLearning.Application.Features.Admin.Interfaces;
+using EnglishLearning.Domain.Entities;
+using System.Security.Claims;
 
 namespace EnglishLearning.API.Controllers;
 
@@ -9,10 +13,12 @@ namespace EnglishLearning.API.Controllers;
 public class ProgressController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
+    private readonly ISystemSettingsService _systemSettingsService;
 
-    public ProgressController(ApplicationDbContext context)
+    public ProgressController(ApplicationDbContext context, ISystemSettingsService systemSettingsService)
     {
         _context = context;
+        _systemSettingsService = systemSettingsService;
     }
 
     [HttpGet("{userId}")]
@@ -60,12 +66,20 @@ public class ProgressController : ControllerBase
         }
     }
 
+    [Authorize]
     [HttpPost("complete")]
     public async Task<IActionResult> CompleteLesson([FromBody] CompleteLessonDto dto)
     {
         try
         {
-            if (dto == null || dto.UserId == Guid.Empty)
+            var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (!Guid.TryParse(userIdValue, out var authenticatedUserId))
+            {
+                return Unauthorized(new { message = "Không xác định được tài khoản hiện tại." });
+            }
+
+            if (dto == null || dto.LessonId <= 0 ||
+                (dto.UserId != Guid.Empty && dto.UserId != authenticatedUserId))
             {
                 return BadRequest(new { message = "Dữ liệu gửi lên không hợp lệ." });
             }
@@ -78,24 +92,38 @@ public class ProgressController : ControllerBase
             }
 
             var progress = await _context.UserProgresses
-                .FirstOrDefaultAsync(p => p.UserId == dto.UserId && p.LessonId == dto.LessonId);
+                .FirstOrDefaultAsync(p => p.UserId == authenticatedUserId && p.LessonId == dto.LessonId);
+            var xpReward = 0;
 
-            if (progress == null)
+            if (progress?.IsCompleted != true)
             {
-                _context.UserProgresses.Add(new Domain.Entities.UserProgress
+                var user = await _context.Users.FindAsync(authenticatedUserId);
+                if (user is null)
                 {
-                    UserId = dto.UserId,
-                    LessonId = dto.LessonId,
-                    IsCompleted = true
-                });
-            }
-            else
-            {
-                progress.IsCompleted = true;
+                    return NotFound(new { message = "Không tìm thấy người dùng." });
+                }
+
+                xpReward = await _systemSettingsService.GetXpRewardAsync(
+                    SystemSettingsService.LessonCompletedXpKey);
+                user.Exp += xpReward;
+
+                if (progress is null)
+                {
+                    _context.UserProgresses.Add(new Domain.Entities.UserProgress
+                    {
+                        UserId = authenticatedUserId,
+                        LessonId = dto.LessonId,
+                        IsCompleted = true
+                    });
+                }
+                else
+                {
+                    progress.IsCompleted = true;
+                }
             }
 
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Đã hoàn thành bài học!" });
+            return Ok(new { message = "Đã hoàn thành bài học!", xpReward });
         }
         catch (Exception ex)
         {
