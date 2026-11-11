@@ -42,7 +42,6 @@ namespace EnglishLearning.Infrastructure
                 throw new InvalidOperationException(
                     "Cần cấu hình Jwt:Secret có ít nhất 32 byte qua user-secrets hoặc biến môi trường.");
             }
-
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {

@@ -27,29 +27,29 @@ export default function Navbar() {
           </NavLink>
 
           <NavLink className="navbar__link" to="/daily-tasks">
-            🎯 Nhiệm vụ hàng ngày
+            Nhiệm vụ hàng ngày
           </NavLink>
 
           <NavLink className="navbar__link" to="/leaderboard">
-            🏆 Bảng xếp hạng
+            Bảng xếp hạng
           </NavLink>
 
           <NavLink className="navbar__link" to="/tests">
-            📝 Bài học & Test
+            Bài học & Test
           </NavLink>
           {isAdmin() && (
             <NavLink className="navbar__link" to="/admin/lessons">
-              🗂️ Quản lý nội dung
+              Quản lý nội dung
             </NavLink>
           )}
           {isAdmin() && (
             <NavLink className="navbar__link" to="/admin/users">
-              👥 Quản lý người dùng
+              Quản lý người dùng
             </NavLink>
           )}
           {isAdmin() && (
             <NavLink className="navbar__link" to="/admin/system">
-              ⚙️ Quản lý hệ thống
+              Quản lý hệ thống
             </NavLink>
           )}
         </nav>

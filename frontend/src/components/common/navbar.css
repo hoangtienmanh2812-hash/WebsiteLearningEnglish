@@ -1,12 +1,17 @@
 /* --- BỌC NGOÀI MENU (SIDEBAR) --- */
 .navbar-shell {
   width: 260px; /* Độ rộng cố định của sidebar */
-  height: 100vh;
-  border-right: 2px solid #e5e7eb; /* Viền xám phân cách với nội dung */
-  background: #ffffff;
+  height: calc(100vh - 32px);
+  margin: 16px 0 16px 16px;
+  border: 1px solid rgb(255 255 255 / 45%);
+  border-radius: 24px;
+  background: rgb(255 255 255 / 58%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+  backdrop-filter: blur(20px) saturate(145%);
   position: sticky;
   top: 0;
   flex-shrink: 0; /* Đảm bảo menu không bị bóp méo khi màn hình nhỏ */
+  z-index: 10;
 }
 
 .navbar {
@@ -23,7 +28,7 @@
   gap: 12px;
   font-size: 20px;
   font-weight: 800;
-  color: #374151;
+  color: #29211f;
   text-decoration: none;
   padding: 0 12px 32px 12px; 
 }
@@ -55,7 +60,7 @@
   padding: 14px 16px;
   font-weight: 700;
   font-size: 15px;
-  color: #777;
+  color: #625956;
   text-decoration: none;
   border-radius: 12px;
   border: 2px solid transparent;
@@ -67,13 +72,14 @@
 
 /* Hiệu ứng khi đang ở trang hiện tại (Active) */
 .navbar__link.active {
-  color: #1cb0f6; /* Màu xanh Duolingo */
-  background-color: #ddf4ff;
-  border-color: #84d8ff;
+  color: #b7150a;
+  background-color: rgb(255 255 255 / 58%);
+  border-color: transparent;
 }
 
 .navbar__link:hover:not(.navbar__link--pending) {
-  background-color: #f3f4f6;
+  color: #b7150a;
+  background-color: rgb(255 255 255 / 58%);
 }
 
 .navbar__link--pending {
@@ -136,7 +142,7 @@
 .user-menu__name {
   flex: 1;
   font-weight: 700;
-  color: #374151;
+  color: #29211f;
   text-align: left;
 }
 
@@ -200,8 +206,10 @@
   .navbar-shell {
     width: 100%;
     height: auto;
-    border-right: none;
-    border-bottom: 2px solid #e5e7eb;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid rgb(255 255 255 / 45%);
   }
   .navbar {
     flex-direction: row;

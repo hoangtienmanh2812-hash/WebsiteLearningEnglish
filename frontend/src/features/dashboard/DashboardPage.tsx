@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuthToken, getAuthUser } from '../auth/authStorage';
 import './dashboard.css';
@@ -14,17 +14,7 @@ export default function DashboardPage() {
   const user = getAuthUser();
   const navigate = useNavigate();
   const [lessonsProgress, setLessonsProgress] = useState<LessonProgress[]>([]);
-  const [streakMessage, setStreakMessage] = useState('');
-
-  // Ép kiểu user.fullName để tránh lỗi TypeScript nếu user có thể là null
-  const userName = user?.fullName || 'bạn';
-  const firstName = userName.trim().split(/\s+/).at(-1) || 'bạn';
-  
-  const today = new Intl.DateTimeFormat('vi-VN', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(new Date());
+  const pathContainerRef = useRef<HTMLDivElement>(null);
 
   const lessonIcons = ['📖', '🎧', '🗣️️', '📝', '📚', '🧩', '🎯', '🏆', '🚀', '🎁'];
 
@@ -54,58 +44,35 @@ export default function DashboardPage() {
         if (!response.ok) {
           throw new Error('Không thể ghi nhận điểm danh streak hôm nay.');
         }
-        const result = await response.json() as { streakCount: number; xpReward: number };
-        if (result.xpReward > 0) {
-          setStreakMessage(`Điểm danh thành công: streak ${result.streakCount} ngày, +${result.xpReward} EXP.`);
-        }
+        await response.json();
       })
       .catch((caughtError: unknown) => {
-        setStreakMessage(caughtError instanceof Error
-          ? caughtError.message
-          : 'Không thể ghi nhận điểm danh streak hôm nay.');
+        console.error('Không thể ghi nhận điểm danh streak:', caughtError);
       });
   }, [user?.id]);
 
+  useEffect(() => () => {
+    pathContainerRef.current
+      ?.closest<HTMLElement>('.main-layout__content')
+      ?.style.setProperty('--dashboard-background-shift', '0px');
+  }, []);
+
+  const handlePathScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const container = event.currentTarget;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const scrollProgress = maxScroll > 0 ? container.scrollLeft / maxScroll : 0;
+    const backgroundShift = Math.min(Math.max(scrollProgress, 0), 1) * 42;
+
+    container
+      .closest<HTMLElement>('.main-layout__content')
+      ?.style.setProperty('--dashboard-background-shift', `${backgroundShift}px`);
+  };
+
   return (
     <section className="dashboard" aria-labelledby="dashboard-title">
-      <p className="dashboard__date">{today}</p>
-      {streakMessage && (
-        <p className="dashboard-hero__note" role={streakMessage.startsWith('Không thể') ? 'alert' : 'status'}>
-          {streakMessage}
-        </p>
-      )}
-
-      <div className="dashboard-hero">
-        <div className="dashboard-hero__copy">
-          <span className="dashboard-hero__eyebrow">✦ KHÔNG GIAN HỌC TẬP CỦA BẠN</span>
-          <h1 id="dashboard-title">Chào {firstName}, hôm nay mình học gì nhỉ?</h1>
-          <p>
-            Chọn một khu vực để bắt đầu. Những tính năng học tập sẽ được mở dần trong hành trình của bạn.
-          </p>
-          <div className="dashboard-hero__note">
-            <span aria-hidden="true">✦</span>
-            <span>Học một chút mỗi ngày, tiến bộ một cách bền vững.</span>
-          </div>
-        </div>
-
-        <div className="dashboard-hero__art" aria-hidden="true">
-          <div className="dashboard-hero__shape dashboard-hero__shape--one" />
-          <div className="dashboard-hero__shape dashboard-hero__shape--two" />
-          <div className="dashboard-hero__flashcard">
-            <small>WORD OF THE DAY</small>
-            <strong>Shine</strong>
-            <span>/ʃaɪn/</span>
-          </div>
-          <div className="dashboard-hero__sun">✦</div>
-          <div className="dashboard-hero__mini-card">You can do it!</div>
-        </div>
-      </div>
-
       {/* --- KHU VỰC TIẾN ĐỘ HỌC TẬP (CUỘN NGANG) --- */}
       <div className="learning-path-section">
-        <h3 className="section-title">TIẾN ĐỘ HÀNH TRÌNH CỦA BẠN</h3>
-        
-        <div className="path-container">
+        <div className="path-container" ref={pathContainerRef} onScroll={handlePathScroll}>
           <div className="nodes-row">
             {lessonsProgress.map((progress, index) => {
               const lessonId = progress.lessonId;

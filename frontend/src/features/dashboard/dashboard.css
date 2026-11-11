@@ -1,7 +1,18 @@
+.main-layout:has(.dashboard) {
+  background: url('../../assets/Background.jpg') center / cover fixed;
+}
+
 .main-layout__content:has(.dashboard) {
-  background:
+  background-image:
     linear-gradient(rgb(255 249 251 / 0%), rgb(255 249 251 / 0%)),
-    url('../../assets/Background.jpg') center / cover fixed;
+    url('../../assets/Background.jpg');
+  background-position:
+    center,
+    calc(50% - var(--dashboard-background-shift, 0px)) center;
+  background-repeat: no-repeat;
+  background-size: auto, cover;
+  background-attachment: fixed, fixed;
+  transition: background-position 160ms linear;
 }
 
 .dashboard {
@@ -302,7 +313,7 @@
 }
 /* --- CSS CHO KHU VỰC ZIG ZAG --- */
 .learning-path-section {
-  margin: 40px 0;
+  margin: calc(60vh - 122px) 0 40px;
 }
 
 .section-title {
@@ -409,12 +420,12 @@
 .nodes-row {
   --node-gap: clamp(34px, 6vw, 86px);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   width: max-content;
   min-width: 100%;
   margin: 0;
-  padding: 6px 8px;
+  padding: 42px 8px;
   gap: var(--node-gap);
 }
 
@@ -433,6 +444,12 @@
   font: inherit;
   text-align: center;
   transition: transform .18s ease;
+  --zigzag-offset: -38px;
+  transform: translateY(var(--zigzag-offset));
+}
+
+.node:nth-child(even) {
+  --zigzag-offset: 38px;
 }
 
 .node:not(:last-child)::after {
@@ -444,10 +461,16 @@
   border-radius: 99px;
   content: '';
   background: #e2e8f0;
+  transform: rotate(20deg);
+  transform-origin: left center;
+}
+
+.node:nth-child(even):not(:last-child)::after {
+  transform: rotate(-20deg);
 }
 
 .node.completed:not(:last-child)::after { background: #86efac; }
-.node:hover:not(:disabled) { transform: translateY(-5px); }
+.node:hover:not(:disabled) { transform: translateY(calc(var(--zigzag-offset) - 5px)); }
 .node:focus-visible { outline: 3px solid #93c5fd; outline-offset: 6px; border-radius: 16px; }
 .node:disabled { cursor: not-allowed; }
 
@@ -505,7 +528,28 @@
 .node.locked .node__title,
 .node.locked .node__order { color: #94a3b8; }
 
+@media (prefers-reduced-motion: reduce) {
+  .main-layout__content:has(.dashboard) {
+    transition: none;
+  }
+}
+
 @media (max-width: 650px) {
-  .nodes-row { --node-gap: 32px; }
+  .learning-path-section {
+    margin-top: calc(60vh - 104px);
+  }
+
+  .nodes-row {
+    --node-gap: 32px;
+    padding-block: 38px;
+  }
   .node { width: 110px; }
+  .node:not(:last-child)::after {
+    left: calc(50% + 38px);
+    width: calc(100% + var(--node-gap) - 76px);
+    transform: rotate(24deg);
+  }
+  .node:nth-child(even):not(:last-child)::after {
+    transform: rotate(-24deg);
+  }
 }
