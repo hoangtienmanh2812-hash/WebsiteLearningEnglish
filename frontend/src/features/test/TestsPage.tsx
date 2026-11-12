@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { SkeletonBlock } from '../../components/common/Skeleton';
 import './TestsPage.css';
 
 interface TestSummary {
@@ -46,11 +47,22 @@ export default function TestsPage() {
       <h1 id="tests-title">Bài kiểm tra</h1>
       <p className="tests-page__description">Chọn một bài kiểm tra để đánh giá kiến thức của bạn.</p>
 
-      {loading && <p>Đang tải danh sách bài kiểm tra...</p>}
+      {loading && (
+        <div className="tests-grid tests-grid--skeleton" role="status" aria-label="Đang tải danh sách bài kiểm tra">
+          {[0, 1, 2, 3].map((item) => (
+            <article className="test-card test-card--skeleton" key={item}>
+              <SkeletonBlock height="13px" width="32px" />
+              <SkeletonBlock height="22px" width="75%" />
+              <SkeletonBlock height="14px" width="48%" />
+              <SkeletonBlock className="test-card__skeleton-button" height="40px" width="112px" />
+            </article>
+          ))}
+        </div>
+      )}
       {error && <p className="tests-page__error" role="alert">{error}</p>}
       {!loading && !error && tests.length === 0 && <p>Chưa có bài kiểm tra nào.</p>}
 
-      <div className="tests-grid">
+      {!loading && <div className="tests-grid">
         {tests.map((test, index) => (
           <article className="test-card" key={test.id}>
             <span className="test-card__number">{String(index + 1).padStart(2, '0')}</span>
@@ -61,7 +73,7 @@ export default function TestsPage() {
             </button>
           </article>
         ))}
-      </div>
+      </div>}
     </section>
   );
 }

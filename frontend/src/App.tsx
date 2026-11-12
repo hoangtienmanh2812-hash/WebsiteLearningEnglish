@@ -11,11 +11,13 @@ import AdminRoute from './features/auth/AdminRoute';
 import AdminLessonsPage from './features/admin/AdminLessonsPage';
 import AdminUsersPage from './features/admin/AdminUsersPage';
 import AdminSystemPage from './features/admin/AdminSystemPage';
+import AccountPage from './features/account/AccountPage';
 
 import { DailyTasks } from './features/tasks/DailyTasks';
 import { Leaderboard } from './features/leaderboard/leaderboard';
 
 import './index.css';
+import './siteTheme.css';
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
             <Route path="/daily-tasks" element={<DailyTasks />} />
             <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/tests" element={<TestsPage />} />
+            <Route path="/account" element={<AccountPage />} />
             <Route element={<AdminRoute />}>
               <Route path="/admin/lessons" element={<AdminLessonsPage />} />
               <Route path="/admin/users" element={<AdminUsersPage />} />

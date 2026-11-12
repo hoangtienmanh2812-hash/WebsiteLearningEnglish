@@ -90,6 +90,33 @@
   white-space: nowrap;
 }
 
+.admin-users__count-skeleton {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.admin-users__details-skeleton {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.admin-users__detail-skeleton-card {
+  display: grid;
+  min-height: 74px;
+  align-content: center;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #e5ebed;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.admin-users__details-skeleton .skeleton-table {
+  grid-column: 1 / -1;
+}
+
 .admin-users__button {
   min-height: 42px;
   padding: 0 16px;
@@ -364,5 +391,9 @@
 
   .admin-users__dialog {
     padding: 18px;
+  }
+
+  .admin-users__details-skeleton {
+    grid-template-columns: 1fr;
   }
 }

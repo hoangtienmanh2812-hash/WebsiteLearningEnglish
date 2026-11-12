@@ -14,6 +14,8 @@ export type AdminLesson = {
   id: number;
   title: string;
   lessonType: 'lesson' | 'test';
+  contentSource: 'SQL Server' | 'Google Drive';
+  questionCount: number | null;
   folderId: string;
   folderPath: string;
   modifiedTime: string | null;

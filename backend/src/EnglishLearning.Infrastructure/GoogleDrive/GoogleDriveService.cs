@@ -111,6 +111,11 @@ public class GoogleDriveService : IAdminLessonService, IDisposable
             .AsNoTracking()
             .OrderBy(lesson => lesson.Id)
             .ToListAsync(cancellationToken);
+        var questionCounts = await _context.Questions
+            .AsNoTracking()
+            .GroupBy(question => question.LessonId)
+            .Select(group => new { LessonId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(group => group.LessonId, group => group.Count, cancellationToken);
 
         return lessons
             .Select(lesson =>
@@ -130,6 +135,12 @@ public class GoogleDriveService : IAdminLessonService, IDisposable
                 Id = item.Lesson.Id,
                 Title = item.Lesson.Title,
                 LessonType = item.Lesson.LessonType,
+                ContentSource = string.Equals(item.Lesson.LessonType, "test", StringComparison.OrdinalIgnoreCase)
+                    ? "Google Drive"
+                    : "SQL Server",
+                QuestionCount = string.Equals(item.Lesson.LessonType, "test", StringComparison.OrdinalIgnoreCase)
+                    ? null
+                    : questionCounts.GetValueOrDefault(item.Lesson.Id),
                 FolderId = item.DriveFile?.Folder.Id ?? string.Empty,
                 FolderPath = item.DriveFile?.Folder.Path ?? string.Empty,
                 ModifiedTime = item.DriveFile?.File.ModifiedTimeDateTimeOffset
@@ -196,13 +207,17 @@ public class GoogleDriveService : IAdminLessonService, IDisposable
             DriveUrl = BuildDriveUrl(uploaded.Id)
         };
 
+        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        await LessonIdGenerator.AssignIdIfNeededAsync(_context, lesson, cancellationToken);
         _context.Lessons.Add(lesson);
         try
         {
             await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch (Exception databaseException)
         {
+            await transaction.RollbackAsync(CancellationToken.None);
             try
             {
                 var drive = await GetDriveServiceAsync(CancellationToken.None);
@@ -583,7 +598,7 @@ public class GoogleDriveService : IAdminLessonService, IDisposable
     private static string BuildDriveUrl(string fileId) =>
         $"https://drive.google.com/uc?export=download&id={Uri.EscapeDataString(fileId)}";
 
-    private static string? ExtractDriveFileId(string driveUrl)
+    private static string? ExtractDriveFileId(string? driveUrl)
     {
         if (!Uri.TryCreate(driveUrl, UriKind.Absolute, out var uri) ||
             uri.Host is not ("drive.google.com" or "docs.google.com" or "drive.usercontent.google.com"))

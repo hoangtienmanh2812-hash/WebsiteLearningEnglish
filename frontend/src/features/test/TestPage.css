@@ -164,6 +164,35 @@
   text-align: center;
 }
 
+.test-page-skeleton__title,
+.test-page-skeleton__question,
+.test-page-skeleton__sidebar {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.test-page-skeleton__timer {
+  border-radius: 8px;
+}
+
+.test-page-skeleton__answers {
+  display: grid;
+  gap: 12px;
+}
+
+.test-page-skeleton__actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.test-page-skeleton__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
 @media (max-width: 720px) {
   .test-header,
   .test-body { flex-direction: column; }

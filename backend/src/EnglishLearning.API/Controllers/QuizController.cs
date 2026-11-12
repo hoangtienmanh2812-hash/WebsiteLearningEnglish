@@ -10,6 +10,7 @@ using EnglishLearning.Application.Features.Admin.Interfaces;
 using EnglishLearning.Domain.Entities;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace EnglishLearning.API.Controllers;
 
@@ -37,13 +38,17 @@ public class QuizController : ControllerBase
     public sealed record SubmitQuizAnswerRequest(string Answer);
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetQuiz(int id, [FromQuery] string? lessonType)
+    public async Task<IActionResult> GetQuiz(
+        int id,
+        [FromQuery] string? lessonType,
+        CancellationToken cancellationToken)
     {
-        // 1. Tìm bài học trong cơ sở dữ liệu SQL Server theo ID
-        var lesson = await _context.Lessons.FindAsync(id);
-        if (lesson == null || string.IsNullOrEmpty(lesson.DriveUrl))
+        var lesson = await _context.Lessons
+            .AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
+        if (lesson is null)
         {
-            return NotFound(new { message = "Không tìm thấy bài học hoặc chưa có link dữ liệu!" });
+            return NotFound(new { message = "Không tìm thấy bài học." });
         }
 
         if (!string.IsNullOrWhiteSpace(lessonType) &&
@@ -52,19 +57,93 @@ public class QuizController : ControllerBase
             return NotFound(new { message = "Nội dung không thuộc loại được yêu cầu." });
         }
 
-        try
+        if (string.Equals(lesson.LessonType, "test", StringComparison.OrdinalIgnoreCase))
         {
-            var jsonResponse = await _driveService.DownloadLessonContentAsync(
-                lesson.DriveUrl,
-                HttpContext.RequestAborted);
+            if (string.IsNullOrWhiteSpace(lesson.DriveUrl))
+            {
+                return NotFound(new { message = "Bài kiểm tra chưa có đường dẫn dữ liệu Google Drive." });
+            }
 
-            // 3. Trả thẳng chuỗi JSON đó về cho Frontend (React)
-            return Content(jsonResponse, "application/json");
+            try
+            {
+                var testContent = await _driveService.DownloadLessonContentAsync(
+                    lesson.DriveUrl,
+                    cancellationToken);
+                return Content(testContent, "application/json");
+            }
+            catch (GoogleApiException)
+            {
+                return StatusCode(
+                    StatusCodes.Status502BadGateway,
+                    new { message = "Không thể tải dữ liệu bài kiểm tra từ Google Drive." });
+            }
         }
-        catch (GoogleApiException)
+
+        var questions = await _context.Questions
+            .AsNoTracking()
+            .Where(question => question.LessonId == id)
+            .OrderBy(question => question.Id)
+            .ToListAsync(cancellationToken);
+        var responseQuestions = new List<QuizQuestionResponse>(questions.Count);
+        foreach (var question in questions)
         {
-            return StatusCode(StatusCodes.Status502BadGateway, new { message = "Không thể tải dữ liệu bài học từ Google Drive." });
+            var correctAnswer = GetCorrectAnswerIndex(question);
+            if (correctAnswer is null)
+            {
+                return UnprocessableEntity(new
+                {
+                    message = $"Câu hỏi {question.Id} thiếu đáp án đúng hợp lệ trong cơ sở dữ liệu."
+                });
+            }
+
+            responseQuestions.Add(new QuizQuestionResponse(
+                question.QuestionText,
+                question.Option1,
+                question.Option2,
+                question.Option3,
+                question.Option4,
+                correctAnswer));
         }
+
+        string? attachmentUrl = null;
+        string? attachmentError = null;
+        if (!string.IsNullOrWhiteSpace(lesson.DriveUrl))
+        {
+            try
+            {
+                var content = await _driveService.DownloadLessonContentAsync(lesson.DriveUrl, cancellationToken);
+                using var document = JsonDocument.Parse(content);
+                if (document.RootElement.ValueKind == JsonValueKind.Object &&
+                    document.RootElement.TryGetProperty("file_dinh_kem", out var attachmentElement) &&
+                    attachmentElement.ValueKind == JsonValueKind.String)
+                {
+                    attachmentUrl = attachmentElement.GetString();
+                }
+            }
+            catch (GoogleApiException)
+            {
+                attachmentError = "Không thể tải thông tin tài liệu đính kèm từ Google Drive.";
+            }
+            catch (JsonException)
+            {
+                attachmentError = "Dữ liệu tài liệu đính kèm không đúng định dạng JSON.";
+            }
+            catch (HttpRequestException)
+            {
+                attachmentError = "Không thể tải thông tin tài liệu đính kèm từ Google Drive.";
+            }
+            catch (InvalidOperationException)
+            {
+                attachmentError = "Không thể tải thông tin tài liệu đính kèm từ Google Drive.";
+            }
+        }
+
+        return Ok(new
+        {
+            questions = responseQuestions,
+            file_dinh_kem = attachmentUrl,
+            attachment_error = attachmentError
+        });
     }
 
     [Authorize]
@@ -90,104 +169,136 @@ public class QuizController : ControllerBase
         var lesson = await _context.Lessons
             .AsNoTracking()
             .SingleOrDefaultAsync(item => item.Id == id, cancellationToken);
-        if (lesson is null || string.IsNullOrWhiteSpace(lesson.DriveUrl))
+        if (lesson is null)
         {
             return NotFound(new { message = "Không tìm thấy bài học hoặc bài kiểm tra." });
         }
 
+        string? correctAnswer;
+        if (string.Equals(lesson.LessonType, "test", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(lesson.DriveUrl))
+            {
+                return NotFound(new { message = "Bài kiểm tra chưa có đường dẫn dữ liệu Google Drive." });
+            }
+
+            try
+            {
+                var content = await _driveService.DownloadLessonContentAsync(
+                    lesson.DriveUrl,
+                    cancellationToken);
+                using var document = JsonDocument.Parse(content);
+                if (!document.RootElement.TryGetProperty("questions", out var questions) ||
+                    questions.ValueKind != JsonValueKind.Array ||
+                    questionIndex >= questions.GetArrayLength())
+                {
+                    return BadRequest(new { message = "Không tìm thấy câu hỏi trong dữ liệu bài kiểm tra." });
+                }
+
+                var driveQuestion = questions[questionIndex];
+                if (!driveQuestion.TryGetProperty("correct-ans", out var correctAnswerElement) ||
+                    correctAnswerElement.ValueKind != JsonValueKind.String)
+                {
+                    return UnprocessableEntity(new { message = "Câu hỏi thiếu đáp án đúng hợp lệ." });
+                }
+
+                correctAnswer = correctAnswerElement.GetString()?.Trim();
+                if (correctAnswer is not ("1" or "2" or "3" or "4"))
+                {
+                    return UnprocessableEntity(new { message = "Câu hỏi thiếu đáp án đúng hợp lệ." });
+                }
+
+                if (!driveQuestion.TryGetProperty(request.Answer, out var selectedOption) ||
+                    selectedOption.ValueKind != JsonValueKind.String)
+                {
+                    return BadRequest(new { message = "Lựa chọn không tồn tại trong câu hỏi." });
+                }
+            }
+            catch (GoogleApiException)
+            {
+                return StatusCode(
+                    StatusCodes.Status502BadGateway,
+                    new { message = "Không thể xác minh đáp án từ Google Drive." });
+            }
+            catch (JsonException)
+            {
+                return UnprocessableEntity(new { message = "Dữ liệu bài kiểm tra không đúng định dạng JSON." });
+            }
+        }
+        else
+        {
+            var question = await _context.Questions
+                .AsNoTracking()
+                .Where(item => item.LessonId == id)
+                .OrderBy(item => item.Id)
+                .Skip(questionIndex)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (question is null)
+            {
+                return BadRequest(new { message = "Không tìm thấy câu hỏi trong cơ sở dữ liệu." });
+            }
+
+            correctAnswer = GetCorrectAnswerIndex(question);
+            if (correctAnswer is null)
+            {
+                return UnprocessableEntity(new { message = "Câu hỏi thiếu đáp án đúng hợp lệ trong cơ sở dữ liệu." });
+            }
+        }
+
+        if (!string.Equals(correctAnswer, request.Answer, StringComparison.Ordinal))
+        {
+            return Ok(new { correct = false, awarded = false, xpReward = 0 });
+        }
+
+        var existingAward = await _context.UserQuestionXpAwards.AnyAsync(award =>
+            award.UserId == userId &&
+            award.LessonId == id &&
+            award.QuestionIndex == questionIndex,
+            cancellationToken);
+        if (existingAward)
+        {
+            return Ok(new { correct = true, awarded = false, xpReward = 0 });
+        }
+
+        var user = await _context.Users.FindAsync(new object?[] { userId }, cancellationToken);
+        if (user is null)
+        {
+            return NotFound(new { message = "Không tìm thấy người dùng." });
+        }
+
+        var xpReward = await _systemSettingsService.GetXpRewardAsync(
+            SystemSettingsService.CorrectAnswerXpKey,
+            cancellationToken);
+        user.Exp += xpReward;
+        _context.UserQuestionXpAwards.Add(new UserQuestionXpAward
+        {
+            UserId = userId,
+            LessonId = id,
+            QuestionIndex = questionIndex,
+            AwardedAt = DateTime.UtcNow
+        });
+
         try
         {
-            var content = await _driveService.DownloadLessonContentAsync(lesson.DriveUrl, cancellationToken);
-            using var document = JsonDocument.Parse(content);
-            if (!document.RootElement.TryGetProperty("questions", out var questions) ||
-                questions.ValueKind != JsonValueKind.Array ||
-                questionIndex >= questions.GetArrayLength())
-            {
-                return BadRequest(new { message = "Không tìm thấy câu hỏi trong dữ liệu bài học." });
-            }
-
-            var question = questions[questionIndex];
-            if (!question.TryGetProperty("correct-ans", out var correctAnswerElement) ||
-                correctAnswerElement.ValueKind != JsonValueKind.String)
-            {
-                return UnprocessableEntity(new { message = "Câu hỏi thiếu đáp án đúng hợp lệ." });
-            }
-
-            var correctAnswer = correctAnswerElement.GetString()?.Trim();
-            if (correctAnswer is not ("1" or "2" or "3" or "4"))
-            {
-                return UnprocessableEntity(new { message = "Câu hỏi thiếu đáp án đúng hợp lệ." });
-            }
-
-            if (!question.TryGetProperty(request.Answer, out var selectedOption) ||
-                selectedOption.ValueKind != JsonValueKind.String)
-            {
-                return BadRequest(new { message = "Lựa chọn không tồn tại trong câu hỏi." });
-            }
-
-            if (!string.Equals(correctAnswer, request.Answer, StringComparison.Ordinal))
-            {
-                return Ok(new { correct = false, awarded = false, xpReward = 0 });
-            }
-
-            var existingAward = await _context.UserQuestionXpAwards.AnyAsync(award =>
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            _context.ChangeTracker.Clear();
+            var wasAlreadyAwarded = await _context.UserQuestionXpAwards.AnyAsync(award =>
                 award.UserId == userId &&
                 award.LessonId == id &&
                 award.QuestionIndex == questionIndex,
                 cancellationToken);
-            if (existingAward)
+            if (wasAlreadyAwarded)
             {
                 return Ok(new { correct = true, awarded = false, xpReward = 0 });
             }
 
-            var user = await _context.Users.FindAsync(new object?[] { userId }, cancellationToken);
-            if (user is null)
-            {
-                return NotFound(new { message = "Không tìm thấy người dùng." });
-            }
-
-            var xpReward = await _systemSettingsService.GetXpRewardAsync(
-                SystemSettingsService.CorrectAnswerXpKey,
-                cancellationToken);
-            user.Exp += xpReward;
-            _context.UserQuestionXpAwards.Add(new UserQuestionXpAward
-            {
-                UserId = userId,
-                LessonId = id,
-                QuestionIndex = questionIndex,
-                AwardedAt = DateTime.UtcNow
-            });
-
-            try
-            {
-                await _context.SaveChangesAsync(cancellationToken);
-            }
-            catch (DbUpdateException)
-            {
-                _context.ChangeTracker.Clear();
-                var wasAlreadyAwarded = await _context.UserQuestionXpAwards.AnyAsync(award =>
-                    award.UserId == userId &&
-                    award.LessonId == id &&
-                    award.QuestionIndex == questionIndex,
-                    cancellationToken);
-                if (wasAlreadyAwarded)
-                {
-                    return Ok(new { correct = true, awarded = false, xpReward = 0 });
-                }
-
-                throw;
-            }
-
-            return Ok(new { correct = true, awarded = true, xpReward });
+            throw;
         }
-        catch (GoogleApiException)
-        {
-            return StatusCode(StatusCodes.Status502BadGateway, new { message = "Không thể xác minh đáp án từ Google Drive." });
-        }
-        catch (JsonException)
-        {
-            return UnprocessableEntity(new { message = "Dữ liệu bài học không đúng định dạng JSON." });
-        }
+
+        return Ok(new { correct = true, awarded = true, xpReward });
     }
 
     [HttpGet("{id}/attachment")]
@@ -303,4 +414,27 @@ public class QuizController : ControllerBase
 
         return "application/octet-stream";
     }
+
+    private static string? GetCorrectAnswerIndex(Question question)
+    {
+        var correctAnswer = question.CorrectAnswer.Trim();
+        if (correctAnswer is "1" or "2" or "3" or "4")
+        {
+            return correctAnswer;
+        }
+
+        var options = new[] { question.Option1, question.Option2, question.Option3, question.Option4 };
+        var answerIndex = Array.FindIndex(options, option =>
+            string.Equals(option.Trim(), correctAnswer, StringComparison.OrdinalIgnoreCase));
+
+        return answerIndex >= 0 ? (answerIndex + 1).ToString() : null;
+    }
+
+    private sealed record QuizQuestionResponse(
+        [property: JsonPropertyName("question")] string Question,
+        [property: JsonPropertyName("1")] string Option1,
+        [property: JsonPropertyName("2")] string Option2,
+        [property: JsonPropertyName("3")] string Option3,
+        [property: JsonPropertyName("4")] string Option4,
+        [property: JsonPropertyName("correct-ans")] string CorrectAnswer);
 }

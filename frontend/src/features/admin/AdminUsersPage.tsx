@@ -8,6 +8,7 @@ import {
   type AdminUser,
   type AdminUserDetails,
 } from './adminUsersApi';
+import { SkeletonBlock, SkeletonTable } from '../../components/common/Skeleton';
 import './adminUsers.css';
 
 type RoleFilter = 'all' | 'admin' | 'user';
@@ -145,16 +146,28 @@ export default function AdminUsersPage() {
             <option value="user">Người dùng</option>
           </select>
         </label>
-        <span className="admin-users__count">{isLoading ? 'Đang tải...' : `${users.length} người dùng`}</span>
+        <span className="admin-users__count">{isLoading ? <SkeletonBlock className="admin-users__count-skeleton" height="14px" width="82px" /> : `${users.length} người dùng`}</span>
       </div>
 
       {pageError && <p className="admin-users__message admin-users__message--error" role="alert">{pageError}</p>}
       {notice && <p className="admin-users__message admin-users__message--success" role="status">{notice}</p>}
-      {isLoadingDetails && <p className="admin-users__message">Đang tải chi tiết người dùng...</p>}
+      {isLoadingDetails && (
+        <div className="admin-users__details-skeleton" role="status" aria-label="Đang tải chi tiết người dùng">
+          {[0, 1, 2].map((item) => (
+            <div className="admin-users__detail-skeleton-card" key={item}>
+              <SkeletonBlock height="13px" width="65%" />
+              <SkeletonBlock height="20px" width="42%" />
+            </div>
+          ))}
+          <SkeletonTable columns={3} rows={4} />
+        </div>
+      )}
 
       {!isLoading && users.length === 0 && !pageError && (
         <p className="admin-users__empty">Không tìm thấy người dùng phù hợp.</p>
       )}
+
+      {isLoading && <SkeletonTable columns={6} rows={6} />}
 
       {!isLoading && users.length > 0 && (
         <div className="admin-users__table-wrap">

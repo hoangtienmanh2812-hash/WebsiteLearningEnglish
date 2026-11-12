@@ -2,9 +2,12 @@ using System.Net;
 using System.Text.Json;
 using EnglishLearning.Application.Features.Admin.DTOs;
 using EnglishLearning.Application.Features.Admin.Interfaces;
+using EnglishLearning.Domain.Entities;
+using EnglishLearning.Infrastructure.Data;
 using Google;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace EnglishLearning.API.Controllers;
@@ -15,13 +18,16 @@ namespace EnglishLearning.API.Controllers;
 public sealed class AdminLessonsController : ControllerBase
 {
     private const int MaximumJsonLength = 2 * 1024 * 1024;
+    private readonly ApplicationDbContext _context;
     private readonly IAdminLessonService _lessonService;
     private readonly ILogger<AdminLessonsController> _logger;
 
     public AdminLessonsController(
+        ApplicationDbContext context,
         IAdminLessonService lessonService,
         ILogger<AdminLessonsController> logger)
     {
+        _context = context;
         _lessonService = lessonService;
         _logger = logger;
     }
@@ -61,6 +67,31 @@ public sealed class AdminLessonsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetLesson(int id, CancellationToken cancellationToken)
     {
+        var metadata = await _context.Lessons
+            .AsNoTracking()
+            .SingleOrDefaultAsync(lesson => lesson.Id == id, cancellationToken);
+        if (metadata is null)
+        {
+            return NotFound(new { message = "Không tìm thấy bài học." });
+        }
+
+        if (!string.Equals(metadata.LessonType, "test", StringComparison.OrdinalIgnoreCase))
+        {
+            var questions = await _context.Questions
+                .AsNoTracking()
+                .Where(question => question.LessonId == id)
+                .OrderBy(question => question.Id)
+                .ToListAsync(cancellationToken);
+
+            return Ok(new AdminLessonContentDto
+            {
+                Id = metadata.Id,
+                Title = metadata.Title,
+                LessonType = metadata.LessonType,
+                Content = SerializeSqlLessonContent(metadata.Title, questions)
+            });
+        }
+
         try
         {
             var lesson = await _lessonService.GetLessonAsync(id, cancellationToken);
@@ -80,9 +111,61 @@ public sealed class AdminLessonsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var validationError = ValidateRequest(request.Title, request.LessonType, request.Content);
-        if (validationError is not null || string.IsNullOrWhiteSpace(request.FolderId))
+        if (validationError is not null)
         {
-            return BadRequest(new { message = validationError ?? "Cần chọn thư mục lưu bài học." });
+            return BadRequest(new { message = validationError });
+        }
+
+        if (string.Equals(request.LessonType, "test", StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrWhiteSpace(request.FolderId))
+        {
+            return BadRequest(new { message = "Cần chọn thư mục lưu bài kiểm tra." });
+        }
+
+        if (string.Equals(request.LessonType, "lesson", StringComparison.OrdinalIgnoreCase))
+        {
+            var parsedQuestions = ParseSqlQuestions(request.Content);
+            if (parsedQuestions.Error is not null)
+            {
+                return BadRequest(new { message = parsedQuestions.Error });
+            }
+
+            try
+            {
+                var lesson = new Lesson
+                {
+                    Title = request.Title.Trim(),
+                    LessonType = "lesson"
+                };
+                await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+                await LessonIdGenerator.AssignIdIfNeededAsync(_context, lesson, cancellationToken);
+                _context.Lessons.Add(lesson);
+                await _context.SaveChangesAsync(cancellationToken);
+                foreach (var question in parsedQuestions.Questions!)
+                {
+                    question.LessonId = lesson.Id;
+                    _context.Questions.Add(question);
+                }
+
+                await _context.SaveChangesAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
+
+                return CreatedAtAction(nameof(GetLesson), new { id = lesson.Id }, new AdminLessonContentDto
+                {
+                    Id = lesson.Id,
+                    Title = lesson.Title,
+                    LessonType = lesson.LessonType,
+                    Content = SerializeSqlLessonContent(lesson.Title, parsedQuestions.Questions)
+                });
+            }
+            catch (DbUpdateException exception)
+            {
+                _logger.LogError(exception, "Failed to save SQL-backed lesson content for {LessonTitle}.", request.Title);
+                return StatusCode(StatusCodes.Status500InternalServerError, new
+                {
+                    message = "Không thể lưu bài học vào SQL Server. Vui lòng kiểm tra cấu trúc bảng Lessons và Questions."
+                });
+            }
         }
 
         try
@@ -116,6 +199,52 @@ public sealed class AdminLessonsController : ControllerBase
             return BadRequest(new { message = validationError });
         }
 
+        var existingLesson = await _context.Lessons.FindAsync(new object?[] { id }, cancellationToken);
+        if (existingLesson is null)
+        {
+            return NotFound(new { message = "Không tìm thấy bài học." });
+        }
+
+        if (!string.Equals(existingLesson.LessonType, request.LessonType, StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new
+            {
+                message = "Không thể đổi loại nội dung vì bài học và bài kiểm tra dùng nơi lưu trữ khác nhau."
+            });
+        }
+
+        if (string.Equals(existingLesson.LessonType, "lesson", StringComparison.OrdinalIgnoreCase))
+        {
+            var parsedQuestions = ParseSqlQuestions(request.Content);
+            if (parsedQuestions.Error is not null)
+            {
+                return BadRequest(new { message = parsedQuestions.Error });
+            }
+
+            existingLesson.Title = request.Title.Trim();
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            var currentQuestions = await _context.Questions
+                .Where(question => question.LessonId == id)
+                .ToListAsync(cancellationToken);
+            _context.Questions.RemoveRange(currentQuestions);
+            foreach (var question in parsedQuestions.Questions!)
+            {
+                question.LessonId = id;
+                _context.Questions.Add(question);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return Ok(new AdminLessonContentDto
+            {
+                Id = existingLesson.Id,
+                Title = existingLesson.Title,
+                LessonType = existingLesson.LessonType,
+                Content = SerializeSqlLessonContent(existingLesson.Title, parsedQuestions.Questions)
+            });
+        }
+
         try
         {
             var lesson = await _lessonService.UpdateLessonAsync(id, request, cancellationToken);
@@ -140,6 +269,35 @@ public sealed class AdminLessonsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteLesson(int id, CancellationToken cancellationToken)
     {
+        var lesson = await _context.Lessons.FindAsync(new object?[] { id }, cancellationToken);
+        if (lesson is null)
+        {
+            return NotFound(new { message = "Không tìm thấy bài học." });
+        }
+
+        if (!string.Equals(lesson.LessonType, "test", StringComparison.OrdinalIgnoreCase))
+        {
+            var hasProgress = await _context.UserProgresses
+                .AnyAsync(progress => progress.LessonId == id, cancellationToken);
+            var hasXpAwards = await _context.UserQuestionXpAwards
+                .AnyAsync(award => award.LessonId == id, cancellationToken);
+            if (hasProgress || hasXpAwards)
+            {
+                return Conflict(new
+                {
+                    message = "Không thể xóa bài học đã có tiến độ hoặc EXP của người dùng. Hãy sửa câu hỏi thay vì xóa bài."
+                });
+            }
+
+            var questions = await _context.Questions
+                .Where(question => question.LessonId == id)
+                .ToListAsync(cancellationToken);
+            _context.Questions.RemoveRange(questions);
+            _context.Lessons.Remove(lesson);
+            await _context.SaveChangesAsync(cancellationToken);
+            return NoContent();
+        }
+
         try
         {
             return await _lessonService.DeleteLessonAsync(id, cancellationToken)
@@ -152,11 +310,124 @@ public sealed class AdminLessonsController : ControllerBase
         }
     }
 
+    private static (List<Question>? Questions, string? Error) ParseSqlQuestions(string content)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            if (document.RootElement.ValueKind != JsonValueKind.Object ||
+                !document.RootElement.TryGetProperty("questions", out var questionArray) ||
+                questionArray.ValueKind != JsonValueKind.Array ||
+                questionArray.GetArrayLength() == 0)
+            {
+                return (null, "Bài học SQL cần có ít nhất một câu hỏi.");
+            }
+
+            var questions = new List<Question>(questionArray.GetArrayLength());
+            var questionNumber = 0;
+            foreach (var item in questionArray.EnumerateArray())
+            {
+                questionNumber++;
+                if (item.ValueKind != JsonValueKind.Object ||
+                    !TryGetRequiredString(item, "question", out var questionText) ||
+                    !TryGetRequiredString(item, "1", out var option1) ||
+                    !TryGetRequiredString(item, "2", out var option2) ||
+                    !TryGetRequiredString(item, "3", out var option3) ||
+                    !TryGetRequiredString(item, "4", out var option4) ||
+                    !TryGetRequiredString(item, "correct-ans", out var correctAnswer))
+                {
+                    return (null, $"Câu {questionNumber}: cần nhập nội dung, đủ 4 lựa chọn và đáp án đúng.");
+                }
+
+                var options = new[] { option1, option2, option3, option4 };
+                if (correctAnswer is not ("1" or "2" or "3" or "4"))
+                {
+                    var correctAnswerIndex = Array.FindIndex(options, option =>
+                        string.Equals(option, correctAnswer, StringComparison.OrdinalIgnoreCase));
+                    if (correctAnswerIndex < 0)
+                    {
+                        return (null, $"Câu {questionNumber}: đáp án đúng phải khớp một trong bốn lựa chọn.");
+                    }
+
+                    correctAnswer = (correctAnswerIndex + 1).ToString();
+                }
+
+                questions.Add(new Question
+                {
+                    QuestionText = questionText,
+                    Option1 = option1,
+                    Option2 = option2,
+                    Option3 = option3,
+                    Option4 = option4,
+                    CorrectAnswer = correctAnswer
+                });
+            }
+
+            return (questions, null);
+        }
+        catch (JsonException)
+        {
+            return (null, "Nội dung câu hỏi không phải JSON hợp lệ.");
+        }
+    }
+
+    private static bool TryGetRequiredString(JsonElement element, string propertyName, out string value)
+    {
+        value = string.Empty;
+        if (!element.TryGetProperty(propertyName, out var property) ||
+            property.ValueKind != JsonValueKind.String)
+        {
+            return false;
+        }
+
+        value = property.GetString()?.Trim() ?? string.Empty;
+        return value.Length > 0;
+    }
+
+    private static string SerializeSqlLessonContent(string title, IReadOnlyList<Question> questions)
+    {
+        var serializedQuestions = questions.Select(question =>
+        {
+            var serialized = new Dictionary<string, string>
+            {
+                ["question"] = question.QuestionText,
+                ["1"] = question.Option1,
+                ["2"] = question.Option2,
+                ["3"] = question.Option3,
+                ["4"] = question.Option4,
+                ["correct-ans"] = GetCorrectAnswerIndex(question)
+            };
+            return serialized;
+        });
+
+        return JsonSerializer.Serialize(new
+        {
+            name = title,
+            type = "lesson",
+            questions = serializedQuestions,
+            file_dinh_kem = ""
+        });
+    }
+
+    private static string GetCorrectAnswerIndex(Question question)
+    {
+        var correctAnswer = question.CorrectAnswer?.Trim() ?? string.Empty;
+        if (correctAnswer is "1" or "2" or "3" or "4")
+        {
+            return correctAnswer;
+        }
+
+        var options = new[] { question.Option1, question.Option2, question.Option3, question.Option4 };
+        var index = Array.FindIndex(options, option =>
+            string.Equals(option?.Trim(), correctAnswer, StringComparison.OrdinalIgnoreCase));
+        return index >= 0 ? (index + 1).ToString() : string.Empty;
+    }
+
     private static string? ValidateRequest(string title, string lessonType, string content)
     {
-        if (string.IsNullOrWhiteSpace(title))
+        if (string.IsNullOrWhiteSpace(title) || title.Trim().Length > 180)
         {
-            return "Tiêu đề bài học không được để trống.";
+            return "Tiêu đề không được để trống và không vượt quá 180 ký tự.";
         }
 
         if (string.IsNullOrWhiteSpace(lessonType) ||

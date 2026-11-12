@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuthToken, getAuthUser } from '../auth/authStorage';
 import './dashboard.css';
@@ -14,9 +14,8 @@ export default function DashboardPage() {
   const user = getAuthUser();
   const navigate = useNavigate();
   const [lessonsProgress, setLessonsProgress] = useState<LessonProgress[]>([]);
-  const pathContainerRef = useRef<HTMLDivElement>(null);
-
   const lessonIcons = ['📖', '🎧', '🗣️️', '📝', '📚', '🧩', '🎯', '🏆', '🚀', '🎁'];
+  const firstUnlockedIndex = lessonsProgress.findIndex((progress) => progress.isUnlocked && !progress.isCompleted);
 
   useEffect(() => {
     if (user?.id) {
@@ -51,33 +50,17 @@ export default function DashboardPage() {
       });
   }, [user?.id]);
 
-  useEffect(() => () => {
-    pathContainerRef.current
-      ?.closest<HTMLElement>('.main-layout__content')
-      ?.style.setProperty('--dashboard-background-shift', '0px');
-  }, []);
-
-  const handlePathScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const container = event.currentTarget;
-    const maxScroll = container.scrollWidth - container.clientWidth;
-    const scrollProgress = maxScroll > 0 ? container.scrollLeft / maxScroll : 0;
-    const backgroundShift = Math.min(Math.max(scrollProgress, 0), 1) * 42;
-
-    container
-      .closest<HTMLElement>('.main-layout__content')
-      ?.style.setProperty('--dashboard-background-shift', `${backgroundShift}px`);
-  };
-
   return (
     <section className="dashboard" aria-labelledby="dashboard-title">
       {/* --- KHU VỰC TIẾN ĐỘ HỌC TẬP (CUỘN NGANG) --- */}
       <div className="learning-path-section">
-        <div className="path-container" ref={pathContainerRef} onScroll={handlePathScroll}>
-          <div className="nodes-row">
+        <div className="path-container">
+          <div className="nodes-row" aria-label="Lộ trình các cấp độ học">
             {lessonsProgress.map((progress, index) => {
               const lessonId = progress.lessonId;
               const isUnlocked = progress.isUnlocked;
               const isCompleted = progress.isCompleted;
+              const isStartingLesson = index === firstUnlockedIndex;
               const displayTitle = progress.title.replace(/^Bài\s*\d+\s*:?\s*/i, '') || `Bài ${index + 1}`;
               const nodeClass = `node ${isCompleted ? 'completed' : ''} ${isUnlocked ? 'unlocked' : 'locked'}`;
 
@@ -86,15 +69,18 @@ export default function DashboardPage() {
                   type="button"
                   key={lessonId}
                   className={nodeClass}
+                  style={{ gridRow: index + 1 }}
                   disabled={!isUnlocked}
+                  aria-current={isStartingLesson ? 'step' : undefined}
                   aria-label={`${progress.title}. ${isCompleted ? 'Đã hoàn thành' : isUnlocked ? 'Sẵn sàng học' : 'Chưa mở khóa'}`}
                   onClick={() => {
                     navigate(`/quiz/${lessonId}`);
                   }}
                 >
                   <div className="circle">
-                    {isCompleted ? '✓' : isUnlocked ? lessonIcons[index % lessonIcons.length] : '🔒'}
+                    {isCompleted ? '✓' : isUnlocked ? isStartingLesson ? '★' : lessonIcons[index % lessonIcons.length] : '🔒'}
                   </div>
+                  {isStartingLesson && <span className="node__start" aria-hidden="true">Bắt đầu</span>}
                   <span className="node__order">Bài {index + 1}</span>
                   <span className="node__title">{displayTitle}</span>
                 </button>

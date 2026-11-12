@@ -12,6 +12,8 @@ public sealed class AdminLessonDto
     public int Id { get; init; }
     public string Title { get; init; } = string.Empty;
     public string LessonType { get; init; } = "lesson";
+    public string ContentSource { get; init; } = "Google Drive";
+    public int? QuestionCount { get; init; }
     public string FolderId { get; init; } = string.Empty;
     public string FolderPath { get; init; } = string.Empty;
     public DateTimeOffset? ModifiedTime { get; init; }

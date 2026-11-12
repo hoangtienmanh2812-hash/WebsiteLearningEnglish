@@ -10,6 +10,7 @@ import {
   type AdminFolder,
   type AdminLesson,
 } from './adminApi';
+import { SkeletonBlock, SkeletonTable } from '../../components/common/Skeleton';
 import './adminLessons.css';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | JsonObject;
@@ -49,21 +50,12 @@ function hasInvalidFileNameCharacters(name: string): boolean {
     });
 }
 
-function defaultContent(folder: AdminFolder | undefined): string {
-  if (folder?.path.split('/')[0].toLowerCase() === 'vocab') {
-    return JSON.stringify([{
-      id: 1,
-      word: '',
-      meaning: '',
-      phonetic: '',
-      exampleSentence: '',
-    }], null, 2);
-  }
-
+function defaultContent(lessonType: 'lesson' | 'test'): string {
+  const question = { question: '', '1': '', '2': '', '3': '', '4': '', 'correct-ans': '1' };
   return JSON.stringify({
     name: '',
-    type: '',
-    questions: [],
+    type: lessonType,
+    questions: [question],
     file_dinh_kem: '',
   }, null, 2);
 }
@@ -83,6 +75,7 @@ export default function AdminLessonsPage() {
   const [title, setTitle] = useState('');
   const [lessonType, setLessonType] = useState<'lesson' | 'test'>('lesson');
   const [jsonContent, setJsonContent] = useState('');
+  const [importedFileName, setImportedFileName] = useState('');
   const [pageError, setPageError] = useState('');
   const [editorError, setEditorError] = useState('');
   const [notice, setNotice] = useState('');
@@ -169,7 +162,8 @@ export default function AdminLessonsPage() {
     setEditorFolderId(folder?.id ?? '');
     setTitle('');
     setLessonType('lesson');
-    setJsonContent(defaultContent(folder));
+    setJsonContent(defaultContent('lesson'));
+    setImportedFileName('');
     setEditorError('');
     setEditorOpen(true);
   };
@@ -185,6 +179,7 @@ export default function AdminLessonsPage() {
       setTitle(content.title);
       setLessonType(content.lessonType);
       setJsonContent(content.content);
+      setImportedFileName('');
       setEditorOpen(true);
     } catch (error: unknown) {
       setPageError(getAdminApiError(error));
@@ -200,17 +195,92 @@ export default function AdminLessonsPage() {
     }
   };
 
+  const importJsonFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    setEditorError('');
+    if (!file.name.toLowerCase().endsWith('.json')) {
+      setEditorError('Vui lòng chọn file có định dạng .json.');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setEditorError('File JSON vượt quá giới hạn 2 MB.');
+      return;
+    }
+
+    try {
+      const fileContent = await file.text();
+      const parsed = parseJson(fileContent);
+      if (!isJsonObject(parsed)) {
+        setEditorError('File JSON phải có cấu trúc object chứa danh sách câu hỏi.');
+        return;
+      }
+
+      const fileQuestions = getQuestions(parsed);
+      if (!fileQuestions?.length) {
+        setEditorError('File JSON cần có mảng questions với ít nhất một câu hỏi.');
+        return;
+      }
+
+      const normalizedQuestions: JsonObject[] = [];
+      for (const [index, item] of fileQuestions.entries()) {
+        const questionText = getText(item.question ?? item.questionText ?? item.QuestionText).trim();
+        const options = ['1', '2', '3', '4'].map((choice) =>
+          getText(item[choice] ?? item[`option${choice}`] ?? item[`Option${choice}`]).trim());
+        const rawCorrectAnswer = getText(
+          item['correct-ans'] ?? item.correctAnswer ?? item.CorrectAnswer,
+        ).trim();
+        let correctAnswer = rawCorrectAnswer;
+        if (!['1', '2', '3', '4'].includes(correctAnswer)) {
+          const matchingOption = options.findIndex((option) =>
+            option.toLocaleLowerCase() === rawCorrectAnswer.toLocaleLowerCase());
+          if (matchingOption >= 0) correctAnswer = String(matchingOption + 1);
+        }
+
+        if (!questionText || options.some((option) => !option) ||
+            !['1', '2', '3', '4'].includes(correctAnswer)) {
+          setEditorError(`Câu ${index + 1} cần có nội dung, đủ 4 lựa chọn và đáp án đúng hợp lệ.`);
+          return;
+        }
+
+        normalizedQuestions.push({
+          ...item,
+          question: questionText,
+          '1': options[0],
+          '2': options[1],
+          '3': options[2],
+          '4': options[3],
+          'correct-ans': correctAnswer,
+        });
+      }
+
+      setJsonContent(JSON.stringify({
+        ...parsed,
+        name: getText(parsed.name).trim() || title.trim() || file.name.replace(/\.json$/i, ''),
+        type: lessonType,
+        questions: normalizedQuestions,
+      }, null, 2));
+      setImportedFileName(file.name);
+    } catch (error: unknown) {
+      setEditorError(error instanceof Error
+        ? `Không thể đọc file JSON: ${error.message}`
+        : 'Không thể đọc file JSON.');
+    }
+  };
+
   const saveLesson = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setEditorError('');
 
     const normalizedTitle = title.trim();
-    if (!normalizedTitle || hasInvalidFileNameCharacters(normalizedTitle)) {
+    if (!normalizedTitle || (lessonType === 'test' && hasInvalidFileNameCharacters(normalizedTitle))) {
       setEditorError('Tiêu đề không hợp lệ. Không nhập đường dẫn hoặc ký tự đặc biệt.');
       return;
     }
-    if (!editingLessonId && !editorFolderId) {
-      setEditorError('Vui lòng chọn thư mục lưu bài học.');
+    if (!editingLessonId && lessonType === 'test' && !editorFolderId) {
+      setEditorError('Vui lòng chọn thư mục Google Drive lưu bài kiểm tra.');
       return;
     }
 
@@ -229,15 +299,19 @@ export default function AdminLessonsPage() {
           lessonType,
           content: jsonContent,
         });
-        setNotice('Đã cập nhật bài học trên SQL Server và Google Drive.');
+        setNotice(lessonType === 'lesson'
+          ? 'Đã cập nhật bài học và câu hỏi trong SQL Server.'
+          : 'Đã cập nhật bài kiểm tra trên Google Drive.');
       } else {
         await createAdminLesson({
-          folderId: editorFolderId,
+          folderId: lessonType === 'test' ? editorFolderId : '',
           title: normalizedTitle,
           lessonType,
           content: jsonContent,
         });
-        setNotice('Đã tạo bài học trên SQL Server và Google Drive.');
+        setNotice(lessonType === 'lesson'
+          ? 'Đã tạo bài học và câu hỏi trong SQL Server.'
+          : 'Đã tạo bài kiểm tra trên Google Drive.');
       }
       setEditorOpen(false);
       await Promise.all([refreshLessons(), refreshFolders()]);
@@ -249,7 +323,8 @@ export default function AdminLessonsPage() {
   };
 
   const removeLesson = async (lesson: AdminLesson) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa bài học "${lesson.title}" khỏi SQL Server và Google Drive?`)) {
+    const storage = lesson.lessonType === 'lesson' ? 'SQL Server' : 'Google Drive';
+    if (!window.confirm(`Bạn có chắc muốn xóa "${lesson.title}" khỏi ${storage}?`)) {
       return;
     }
 
@@ -314,7 +389,7 @@ export default function AdminLessonsPage() {
         <div>
           <p className="admin-lessons__eyebrow">KHU VỰC QUẢN TRỊ</p>
           <h1>Quản lý nội dung học tập</h1>
-          <p>Thông tin bài học lưu trên SQL Server, nội dung JSON lưu trên Google Drive.</p>
+          <p>Bài học lưu câu hỏi trong SQL Server; bài kiểm tra lưu nội dung JSON trên Google Drive.</p>
         </div>
         <div className="admin-lessons__header-actions">
           <button
@@ -329,15 +404,15 @@ export default function AdminLessonsPage() {
             className="admin-lessons__button"
             type="button"
             onClick={openCreate}
-            disabled={isLoadingFolders || folders.length === 0}
+            disabled={isLoadingFolders}
           >
-            + Thêm bài học
+            + Thêm nội dung
           </button>
         </div>
       </header>
 
       <div className="admin-lessons__toolbar">
-        <label htmlFor="admin-folder-filter">Thư mục nội dung</label>
+        <label htmlFor="admin-folder-filter">Lọc theo thư mục Drive</label>
         <select
           id="admin-folder-filter"
           value={selectedFolderId}
@@ -354,17 +429,19 @@ export default function AdminLessonsPage() {
           ))}
         </select>
         <span className="admin-lessons__count">
-          {isLoadingLessons ? 'Đang tải...' : `${lessons.length} bài học`}
+          {isLoadingLessons ? <SkeletonBlock className="admin-lessons__count-skeleton" height="14px" width="72px" /> : `${lessons.length} bài học`}
         </span>
       </div>
 
       {pageError && <p className="admin-lessons__message admin-lessons__message--error" role="alert">{pageError}</p>}
       {notice && <p className="admin-lessons__message admin-lessons__message--success" role="status">{notice}</p>}
-      {isLoadingFolders && <p className="admin-lessons__state">Đang tải thư mục Google Drive...</p>}
+      {isLoadingFolders && <div className="admin-lessons__folder-skeleton" role="status" aria-label="Đang tải thư mục Google Drive"><SkeletonBlock height="18px" width="min(420px, 70%)" /></div>}
       {!isLoadingFolders && folders.length === 0 && !pageError && (
-        <p className="admin-lessons__state">Không tìm thấy thư mục nội dung trong Google Drive.</p>
+        <p className="admin-lessons__state">
+          Không tìm thấy thư mục Google Drive. Bạn vẫn có thể quản lý bài học được lưu trong SQL Server.
+        </p>
       )}
-      {isLoadingLessons && <p className="admin-lessons__state">Đang tải nội dung...</p>}
+      {isLoadingLessons && <SkeletonTable columns={5} rows={5} />}
       {!isLoadingLessons && lessons.length === 0 && !pageError && folders.length > 0 && (
         <p className="admin-lessons__state">
           {selectedFolder
@@ -379,7 +456,8 @@ export default function AdminLessonsPage() {
             <thead>
               <tr>
                 <th>Tiêu đề bài học</th>
-                <th>Thư mục</th>
+                <th>Nguồn dữ liệu</th>
+                <th>Thư mục Drive</th>
                 <th>Cập nhật</th>
                 <th><span className="visually-hidden">Thao tác</span></th>
               </tr>
@@ -389,13 +467,19 @@ export default function AdminLessonsPage() {
                 <tr key={lesson.id}>
                   <td data-label="Tên file">
                     <strong>{lesson.title}</strong>
-                    <span className="admin-lessons__file-kind">{lesson.lessonType}</span>
+                    <span className="admin-lessons__file-kind">
+                      {lesson.lessonType === 'lesson' ? 'Bài học' : 'Bài kiểm tra'}
+                    </span>
                   </td>
-                  <td data-label="Thư mục">{lesson.folderPath}</td>
+                  <td data-label="Nguồn dữ liệu">
+                    {lesson.contentSource}
+                    {lesson.questionCount !== null && ` · ${lesson.questionCount} câu`}
+                  </td>
+                  <td data-label="Thư mục Drive">
+                    {lesson.lessonType === 'test' ? lesson.folderPath || 'Không có thư mục' : '—'}
+                  </td>
                   <td data-label="Cập nhật">
-                    {lesson.modifiedTime
-                      ? new Date(lesson.modifiedTime).toLocaleString()
-                      : '—'}
+                    {lesson.modifiedTime ? new Date(lesson.modifiedTime).toLocaleString() : '—'}
                   </td>
                   <td className="admin-lessons__row-actions" data-label="Thao tác">
                     <button
@@ -434,8 +518,12 @@ export default function AdminLessonsPage() {
           >
             <header className="admin-lessons__dialog-header">
               <div>
-                <p className="admin-lessons__eyebrow">{editingLessonId ? 'CHỈNH SỬA BÀI HỌC' : 'BÀI HỌC MỚI'}</p>
-                <h2 id="admin-editor-title">{editingLessonId ? 'Sửa nội dung' : 'Thêm bài học'}</h2>
+                <p className="admin-lessons__eyebrow">
+                  {lessonType === 'lesson' ? 'NỘI DUNG SQL SERVER' : 'NỘI DUNG GOOGLE DRIVE'}
+                </p>
+                <h2 id="admin-editor-title">
+                  {editingLessonId ? 'Sửa nội dung' : lessonType === 'lesson' ? 'Thêm bài học' : 'Thêm bài kiểm tra'}
+                </h2>
               </div>
               <button className="admin-lessons__close" type="button" onClick={closeEditor} aria-label="Đóng">
                 ×
@@ -446,7 +534,7 @@ export default function AdminLessonsPage() {
               {editorError && (
                 <p className="admin-lessons__message admin-lessons__message--error" role="alert">{editorError}</p>
               )}
-              {!editingLessonId && (
+              {!editingLessonId && lessonType === 'test' && (
                 <label className="admin-lessons__field">
                   <span>Thư mục lưu</span>
                   <select value={editorFolderId} onChange={(event) => setEditorFolderId(event.target.value)} required>
@@ -465,17 +553,39 @@ export default function AdminLessonsPage() {
                   maxLength={180}
                   required
                 />
-                <small>Tiêu đề được lưu trong SQL; tên file JSON trên Drive được tạo từ tiêu đề.</small>
+                <small>
+                  {lessonType === 'lesson'
+                    ? 'Tiêu đề và câu hỏi được lưu trong SQL Server.'
+                    : 'Tiêu đề được lưu trong SQL; nội dung bài kiểm tra được lưu trên Google Drive.'}
+                </small>
               </label>
               <label className="admin-lessons__field">
                 <span>Loại bài học</span>
                 <select
                   value={lessonType}
-                  onChange={(event) => setLessonType(event.target.value as 'lesson' | 'test')}
+                  disabled={Boolean(editingLessonId)}
+                  onChange={(event) => {
+                    const selectedType = event.target.value as 'lesson' | 'test';
+                    setLessonType(selectedType);
+                    setJsonContent(defaultContent(selectedType));
+                  }}
                 >
                   <option value="lesson">Bài học</option>
                   <option value="test">Bài kiểm tra</option>
                 </select>
+              </label>
+              <label className="admin-lessons__field">
+                <span>Nhập nội dung từ file JSON</span>
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={(event) => { void importJsonFile(event); }}
+                  disabled={isSaving}
+                />
+                <small>
+                  Chọn file JSON có mảng <code>questions</code>; tối đa 2 MB.
+                  {importedFileName ? ` Đã nạp: ${importedFileName}` : ''}
+                </small>
               </label>
               {questions && (
                 <div className="admin-lessons__questions">
@@ -534,18 +644,20 @@ export default function AdminLessonsPage() {
                   ))}
                 </div>
               )}
-              <label className="admin-lessons__field">
-                <span>Nội dung JSON</span>
-                <textarea
-                  className="admin-lessons__json"
-                  value={jsonContent}
-                  onChange={(event) => setJsonContent(event.target.value)}
-                  rows={15}
-                  spellCheck={false}
-                  required
-                />
-                <small>Giữ nguyên các trường chưa chỉnh sửa. Có thể sửa trực tiếp JSON nếu cấu trúc khác.</small>
-              </label>
+              {lessonType === 'test' && (
+                <label className="admin-lessons__field">
+                  <span>Nội dung JSON bài kiểm tra</span>
+                  <textarea
+                    className="admin-lessons__json"
+                    value={jsonContent}
+                    onChange={(event) => setJsonContent(event.target.value)}
+                    rows={15}
+                    spellCheck={false}
+                    required
+                  />
+                  <small>Nội dung bài kiểm tra sẽ được lưu trên Google Drive.</small>
+                </label>
+              )}
               <footer className="admin-lessons__form-actions">
                 <button
                   className="admin-lessons__button admin-lessons__button--secondary"

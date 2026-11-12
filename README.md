@@ -1,128 +1,192 @@
-# Dự án TTCSN - Nhóm 9 (Website Learning English)
+# Website Learning English
 
-Dự án website học tiếng Anh với các công nghệ:
-- **Frontend**: React + TypeScript + Vite + Tailwind CSS
-- **Backend**: C# ASP.NET Core 8.0
-- **Database**: SQL Server (Entity Framework Core)
+Đồ án xây dựng website hỗ trợ người dùng học và ôn luyện tiếng Anh. Người dùng có thể làm bài học/bài kiểm tra, theo dõi tiến độ và điểm kinh nghiệm (XP), thực hiện nhiệm vụ hằng ngày và xem bảng xếp hạng. Ứng dụng có các trang quản trị để quản lý bài học, người dùng và một số thiết lập hệ thống.
 
-## 🏗 Kiến trúc Dự án
+## Tổng quan kiến trúc
 
-Dự án đã được tái cấu trúc lại từ đầu để đảm bảo tính mở rộng và dễ bảo trì cho ứng dụng lớn:
-- **Backend**: Sử dụng **Clean Architecture**.
-- **Frontend**: Sử dụng **Feature-Based Architecture**.
+Ứng dụng gồm frontend SPA, backend Web API và cơ sở dữ liệu SQL Server:
 
----
+```text
+frontend (React SPA)
+        │ HTTP / JSON
+        ▼
+backend/src/EnglishLearning.API
+        │
+        ├── EnglishLearning.Application
+        │       └── EnglishLearning.Domain
+        └── EnglishLearning.Infrastructure
+                ├── Entity Framework Core / SQL Server
+                └── Google Drive API
+```
 
-## 🛠 Quá trình Khởi tạo & Cấu hình (Setup Guide)
+- **Backend — Clean Architecture**
+  - `EnglishLearning.Domain`: các thực thể và quy tắc miền nghiệp vụ; không phụ thuộc vào các lớp bên ngoài.
+  - `EnglishLearning.Application`: các chức năng ứng dụng, dịch vụ và abstraction; phụ thuộc vào Domain.
+  - `EnglishLearning.Infrastructure`: triển khai truy cập dữ liệu, repository, xác thực JWT và tích hợp Google Drive; phụ thuộc vào Application và Domain.
+  - `EnglishLearning.API`: ASP.NET Core Web API, controllers, cấu hình DI, CORS và middleware; kết nối Application với Infrastructure.
+- **Frontend — Feature-based architecture**: mã React được tổ chức theo tính năng trong `frontend/src/features/`, gồm xác thực, dashboard, quiz, bài kiểm tra, nhiệm vụ, bảng xếp hạng, tài khoản và quản trị. `components/` và `layouts/` chứa các thành phần giao diện dùng chung.
+- **Database**: SQL Server, truy cập qua Entity Framework Core; các thay đổi schema được quản lý bằng migrations.
+- **Tích hợp ngoài**: Google Drive API dùng cho nội dung bài học do quản trị viên quản lý.
 
-Dưới đây là chi tiết các bước đã thực hiện để khởi tạo dự án. Bạn có thể tham khảo để hiểu rõ dự án được tạo ra và cấu hình như thế nào.
+### Ngôn ngữ và công nghệ
 
-### 1. Khởi tạo Backend (Clean Architecture)
+- **TypeScript, HTML, CSS** — giao diện người dùng.
+- **C#** — backend và các project kiểm thử.
+- **React 19**, **React Router 7**, **Vite 8**, **Tailwind CSS 4** — frontend.
+- **.NET 8 / ASP.NET Core 8**, **Entity Framework Core 8**, **SQL Server** — backend và dữ liệu.
+- **xUnit** — unit tests và integration tests.
 
-Backend được chia thành 4 lớp (layers) chính, tuân thủ chặt chẽ nguyên tắc Dependency Inversion:
-- **Domain**: Chứa Entities, Enums, Value Objects. (Tuyệt đối KHÔNG phụ thuộc vào bất kỳ layer nào khác, kể cả EF Core hay ASP.NET).
-- **Application**: Chứa Use Cases, Interfaces (IRepository), DTOs. (Chỉ phụ thuộc vào `Domain`).
-- **Infrastructure**: Chứa cấu hình EF Core, DbContext, Authentication (JWT). (Phụ thuộc vào `Application` và `Domain`).
-- **API**: Chứa Controllers, Dependency Injection, Middleware. (Phụ thuộc vào `Application` và `Infrastructure`).
+## Packages và công cụ cần có
 
-**Các lệnh cấu hình đã thực hiện (bằng .NET CLI):**
+### Công cụ cài trên máy
+
+- **.NET 8 SDK**
+- **Node.js 20.19+ hoặc 22.12+** và npm (theo yêu cầu của Vite 8)
+- **SQL Server** — cài local hoặc sử dụng một SQL Server có thể kết nối được
+- Git (nếu clone dự án từ repository)
+
+### Các package của dự án
+
+Frontend khai báo các package trong `frontend/package.json`; backend và tests khai báo NuGet packages trong các file `.csproj`. Các lệnh `npm install` và `dotnet restore` bên dưới sẽ tự tải đúng phiên bản đã khai báo.
+
+- **Frontend:** React, React DOM, React Router, Axios, Vite, TypeScript, Tailwind CSS và Vite plugin, PostCSS, Autoprefixer, Oxlint.
+- **Backend:** Google APIs Auth/Drive, ASP.NET Core JWT Bearer và OpenAPI, Entity Framework Core SQL Server/Design, Swashbuckle, BCrypt.Net và Microsoft SQL Server DAC Fx.
+- **Kiểm thử .NET:** xUnit, Microsoft.NET.Test.Sdk và coverlet.collector.
+
+## Cài đặt và chạy dự án
+
+Thực hiện lần lượt các bước dưới đây. Mở PowerShell tại thư mục gốc repository (`WebsiteLearningEnglish`).
+
+### 1. Tải các package backend và test
+
+Các lệnh `dotnet restore` tải NuGet packages đã khai báo trong từng project. Chạy từ thư mục gốc:
+
 ```powershell
-# 1. Tạo Solution
-dotnet new sln -n EnglishLearning
-
-# 2. Khởi tạo các project (Web API & Class Library)
-cd backend/src
-dotnet new webapi -n EnglishLearning.API -f net8.0
-dotnet new classlib -n EnglishLearning.Application -f net8.0
-dotnet new classlib -n EnglishLearning.Domain -f net8.0
-dotnet new classlib -n EnglishLearning.Infrastructure -f net8.0
-
-# 3. Khởi tạo các project Test
-cd ../../tests
-dotnet new xunit -n EnglishLearning.UnitTests -f net8.0
-dotnet new xunit -n EnglishLearning.IntegrationTests -f net8.0
-
-# 4. Gom các project vào chung Solution
-cd ../backend
-dotnet sln add "src\EnglishLearning.API\EnglishLearning.API.csproj"
-dotnet sln add "src\EnglishLearning.Application\EnglishLearning.Application.csproj"
-dotnet sln add "src\EnglishLearning.Domain\EnglishLearning.Domain.csproj"
-dotnet sln add "src\EnglishLearning.Infrastructure\EnglishLearning.Infrastructure.csproj"
-dotnet sln add "..\tests\EnglishLearning.UnitTests\EnglishLearning.UnitTests.csproj"
-dotnet sln add "..\tests\EnglishLearning.IntegrationTests\EnglishLearning.IntegrationTests.csproj"
-
-# 5. Cấu hình luồng Dependency (References)
-cd src
-dotnet add "EnglishLearning.API\EnglishLearning.API.csproj" reference "EnglishLearning.Application\EnglishLearning.Application.csproj" "EnglishLearning.Infrastructure\EnglishLearning.Infrastructure.csproj"
-dotnet add "EnglishLearning.Application\EnglishLearning.Application.csproj" reference "EnglishLearning.Domain\EnglishLearning.Domain.csproj"
-dotnet add "EnglishLearning.Infrastructure\EnglishLearning.Infrastructure.csproj" reference "EnglishLearning.Application\EnglishLearning.Application.csproj" "EnglishLearning.Domain\EnglishLearning.Domain.csproj"
-```
-
-### 2. Khởi tạo Frontend (Feature-Based Architecture)
-
-Frontend sử dụng **Vite** để build nhanh hơn thay vì CRA cũ. Thay vì nhóm các file theo loại kĩ thuật (tất cả component để chung 1 chỗ), dự án nhóm theo **Feature** (Tính năng) để dễ scale.
-
-**Các lệnh cấu hình đã thực hiện:**
-```bash
-# 1. Khởi tạo Vite React với TypeScript
-npm create vite@latest frontend -- --template react-ts
-cd frontend
-
-# 2. Cài đặt các thư viện thiết yếu
-npm install
-npm install react-router-dom axios
-
-# 3. Cài đặt Tailwind CSS v4 mới nhất cùng Vite Plugin
-npm install -D tailwindcss @tailwindcss/vite postcss autoprefixer
-```
-
-**Cấu trúc thư mục mới:**
-- `src/features/`: Chứa module các tính năng chính của app. (VD: `auth/`, `lessons/`, `vocabulary/`, `exercises/`, `progress/`, `gamification/`, `leaderboard/`, `chatbot/`, `profile/`). Mỗi feature sẽ độc lập, chứa các components, hooks và API riêng của nó.
-- `src/components/ui/`: Các UI component cơ bản/dumb component (Button, Input, Card).
-- `src/components/common/`: Các component dùng chung có logic nhẹ (Header, Footer, Sidebar).
-- `src/layouts/`: Các layout bao bọc trang (MainLayout, AuthLayout).
-- `src/services/`, `src/hooks/`, `src/contexts/`, `src/utils/`, `src/constants/`, `src/config/`: Chứa code logic dùng chung toàn cục.
-
----
-
-## 🚀 Hướng dẫn chạy dự án local
-
-### Chạy Backend
-Mở Terminal, di chuyển vào thư mục `backend` và chạy:
-```bash
 cd backend
-dotnet restore
-dotnet run --project src/EnglishLearning.API/EnglishLearning.API.csproj
+dotnet restore src\EnglishLearning.API\EnglishLearning.API.csproj
+dotnet restore ..\tests\EnglishLearning.UnitTests\EnglishLearning.UnitTests.csproj --configfile nuget.config
+dotnet restore ..\tests\EnglishLearning.IntegrationTests\EnglishLearning.IntegrationTests.csproj --configfile nuget.config
 ```
-*(Backend API thường sẽ chạy ở cổng `http://localhost:5xxx` hoặc `https://localhost:7xxx`)*
 
-#### Cấp quyền quản trị nội dung Google Drive
+### 2. Tải các package frontend
 
-Đặt `Jwt__Secret` thành chuỗi ngẫu nhiên riêng tư có ít nhất 32 byte bằng user-secrets hoặc biến môi trường; không ghi secret vào Git và giữ nguyên giá trị qua các lần khởi động để JWT hiện tại còn hiệu lực. Đăng ký tài khoản người dùng bình thường trước, sau đó thêm email đó vào `GoogleDrive:AdminEmails` trong cấu hình backend (ví dụ: `"AdminEmails": ["admin@example.com"]`) hoặc đặt biến môi trường `GoogleDrive__AdminEmails__0`. API quản trị kiểm tra role trong JWT.
+Mở PowerShell mới tại thư mục gốc repository:
 
-Google Drive được truy cập bằng OAuth của tài khoản quản trị, không dùng Service Account (Service Account không có dung lượng Drive cá nhân). Trong Google Cloud Console, bật Google Drive API, cấu hình OAuth consent screen và tạo OAuth Client ID loại **Desktop app**. Nếu ứng dụng đang ở chế độ Testing, thêm `hoangtienmanh2812@gmail.com` vào danh sách Test users. Tải file client credentials về máy chạy backend tại đường dẫn `C:\secrets\google-oauth-client.json`, hoặc đặt `GoogleDrive__OAuthCredentialsPath` trỏ đến file đó. Không commit file credentials hoặc token vào Git.
-
-Khởi động backend và mở trang quản trị `/admin/lessons`; lần đầu truy cập Drive, cửa sổ trình duyệt sẽ yêu cầu đăng nhập và cấp quyền Google Drive cho tài khoản Google. Đăng nhập bằng tài khoản có quyền trên thư mục gốc đã cấu hình. OAuth token được lưu cục bộ trong `%LOCALAPPDATA%\EnglishLearning\GoogleDriveTokens`.
-
-Thông tin `Title`, `DriveUrl` và `LessonType` được lưu trong SQL Server; nội dung JSON hiện có tiếp tục nằm trong các file Drive tại chỗ. Các thao tác chỉ áp dụng với file JSON bên trong thư mục gốc Google Drive đã cấu hình.
-
-#### Quản lý người dùng
-
-Admin có thể truy cập `/admin/users` để tìm kiếm/lọc người dùng, xem XP, streak và tiến trình bài học, chỉnh sửa tên/email/vai trò và đặt mật khẩu mới (để trống mật khẩu nếu không muốn thay đổi). Mật khẩu mới được lưu dưới dạng BCrypt hash, cần ít nhất 8 ký tự và tối đa 72 byte UTF-8. Migration `AddUserAdminRole` bổ sung cột `Users.IsAdmin` nếu chưa có; chạy `dotnet ef database update --project src/EnglishLearning.Infrastructure --startup-project src/EnglishLearning.API` từ thư mục `backend` để áp dụng migration. Admin không thể tự hạ quyền tài khoản đang đăng nhập. Chức năng khóa/mở khóa tài khoản chưa được triển khai.
-
-#### Quản lý hệ thống dành cho Admin
-
-Admin đã được cấp quyền qua `Users.IsAdmin` hoặc `GoogleDrive:AdminEmails` có thể truy cập `/admin/system` để chỉnh XP từ vựng, hoàn thành bài học, trả lời đúng và điểm danh streak (mỗi quy tắc từ 0–10000), xem nhật ký thay đổi cấu hình/sao lưu và lỗi máy chủ chưa được xử lý, và tải bản sao SQL Server gốc được đóng gói thành ZIP. Quy tắc được lưu trong `SystemSettings` (`Idsetting`, `SettingKey`, `SettingValue`, `UpdatedAt`, `UsersId`) và được backend đọc khi cộng XP. Migration `MoveGamificationToSystemSettings` chuyển giá trị từ bảng `GamificationSettings` cũ sang key `Gamification.VocabularyLearnedXp`, tạo các key còn lại và bảng chống nhận XP câu hỏi lặp lại. Chạy `dotnet ef database update --project src/EnglishLearning.Infrastructure --startup-project src/EnglishLearning.API` từ thư mục `backend` để áp dụng migration. EXP mỗi ngày hiện không bị giới hạn.
-
-Hoàn thành bài học chỉ được thưởng XP một lần cho mỗi người dùng/bài học; câu trả lời được kiểm tra ở backend dựa trên JSON của bài học trong Google Drive và chỉ được thưởng một lần cho mỗi câu hỏi. Điểm danh streak được gọi khi mở dashboard và chỉ thưởng một lần mỗi ngày. API chỉnh Gamification chỉ dành cho Admin; các API cộng XP yêu cầu JWT hợp lệ.
-
-Backend xuất schema và dữ liệu thành tệp BACPAC qua kết nối SQL Server, sau đó đóng gói BACPAC thành ZIP trong thư mục tạm của backend. Cách này không yêu cầu dịch vụ SQL Server có quyền ghi vào thư mục của người dùng/backend. Tài khoản SQL cấu hình trong connection string cần quyền xem schema và đọc toàn bộ dữ liệu. BACPAC là bản sao lưu mức database (schema và dữ liệu), không chứa transaction log hoặc cấu hình cấp server như login/job; để khôi phục, giải nén ZIP rồi import tệp `.bacpac` bằng SSMS hoặc SqlPackage. Tệp tải xuống chứa dữ liệu database nhạy cảm; chỉ lưu ở nơi bảo mật.
-
-### Chạy Frontend
-Mở Terminal mới, di chuyển vào thư mục `frontend` và chạy:
-```bash
+```powershell
 cd frontend
 npm install
+```
+
+Lệnh này cài các package được liệt kê trong `frontend/package.json`.
+
+### 3. Cài công cụ Entity Framework CLI
+
+Chỉ cần cài một lần trên máy để chạy lệnh cập nhật database. Nếu `dotnet-ef` phiên bản 8.0.8 đã được cài, bỏ qua bước này:
+
+```powershell
+dotnet tool install --global dotnet-ef --version 8.0.8
+```
+
+### 4. Cấu hình SQL Server và JWT
+
+Mặc định, cấu hình Development trong `backend/src/EnglishLearning.API/appsettings.Development.json` dùng Windows Authentication tới SQL Server local:
+
+```text
+Server=localhost;Database=EnglishLearningDb;Trusted_Connection=True;TrustServerCertificate=True;
+```
+
+Nếu cần, cập nhật `ConnectionStrings:DefaultConnection` trong cấu hình Development hoặc đặt biến môi trường `ConnectionStrings__DefaultConnection`. Không đưa mật khẩu hoặc thông tin nhạy cảm vào Git.
+
+Backend yêu cầu `Jwt:Secret` dài tối thiểu 32 byte. Mở PowerShell tại thư mục gốc repository rồi chạy nguyên lần lượt các lệnh sau để khởi tạo User Secrets, tự tạo secret ngẫu nhiên và lưu vào cấu hình local:
+
+```powershell
+dotnet user-secrets init --project backend\src\EnglishLearning.API
+
+$bytes = New-Object byte[] 48
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($bytes)
+$secret = [Convert]::ToBase64String($bytes)
+
+dotnet user-secrets set "Jwt:Secret" $secret --project backend\src\EnglishLearning.API
+
+$rng.Dispose()
+Remove-Variable secret, bytes, rng
+```
+
+Các lệnh trên chạy trong PowerShell. Nếu User Secrets đã được khởi tạo cho project trước đó, bỏ qua lệnh `dotnet user-secrets init` và chạy các lệnh còn lại để tạo secret mới. Secret chỉ được lưu trong User Secrets trên máy hiện tại, không được commit vào repository. Nếu không dùng User Secrets, có thể tự đặt biến môi trường `Jwt__Secret`.
+
+### 5. Tạo hoặc cập nhật database
+
+Đảm bảo SQL Server đang chạy, sau đó chạy tại thư mục gốc repository:
+
+```powershell
+dotnet ef database update --project backend\src\EnglishLearning.Infrastructure\EnglishLearning.Infrastructure.csproj --startup-project backend\src\EnglishLearning.API\EnglishLearning.API.csproj
+```
+
+### 6. Khởi động backend
+
+Mở PowerShell mới tại thư mục gốc repository:
+
+```powershell
+cd backend
+dotnet run --project src\EnglishLearning.API\EnglishLearning.API.csproj
+```
+
+Profile mặc định chạy môi trường Development. API có địa chỉ `http://localhost:5219` và `https://localhost:7200`; Swagger UI được mở tại `/swagger` trong môi trường Development.
+
+### 7. Khởi động frontend
+
+Giữ backend đang chạy. Mở PowerShell khác tại thư mục gốc repository:
+
+```powershell
+cd frontend
 npm run dev
 ```
-*(Frontend thường sẽ tự động chạy tại cổng `http://localhost:5173`)*
+
+Mở `http://localhost:5173`. Backend hiện cho phép CORS từ địa chỉ này. Các lệnh frontend khác (chạy trong thư mục `frontend`):
+
+```powershell
+npm run build
+npm run lint
+npm run preview
+```
+
+### Chạy kiểm thử .NET
+
+Từ thư mục gốc repository:
+
+```powershell
+dotnet test tests\EnglishLearning.UnitTests\EnglishLearning.UnitTests.csproj --no-restore
+dotnet test tests\EnglishLearning.IntegrationTests\EnglishLearning.IntegrationTests.csproj --no-restore
+```
+
+## Cấu hình tùy chọn: quản trị nội dung Google Drive
+
+Chỉ cần cấu hình phần này nếu sử dụng trang quản trị bài học với Google Drive:
+
+1. Tạo OAuth Client ID loại **Desktop app** trong Google Cloud Console và bật Google Drive API.
+2. Lưu file OAuth client credentials ngoài repository. Mặc định, backend tìm file tại `C:\secrets\google-oauth-client.json`; có thể đổi bằng biến môi trường `GoogleDrive__OAuthCredentialsPath`.
+3. Cấu hình `GoogleDrive:RootFolderId` trỏ tới thư mục Drive chứa nội dung và cấp quyền truy cập cho tài khoản Google quản trị. Nếu OAuth consent screen đang ở chế độ Testing, thêm tài khoản đó vào danh sách Test users.
+4. Thêm email quản trị vào `GoogleDrive:AdminEmails` hoặc đặt biến môi trường `GoogleDrive__AdminEmails__0`. Token OAuth được lưu cục bộ trên máy chạy backend.
+
+Không commit credentials hoặc OAuth token vào Git. Nội dung JSON bài học được đọc từ Google Drive; thông tin quản lý bài học được lưu trong SQL Server.
+
+## Cấu trúc repository
+
+```text
+backend/
+  EnglishLearning.slnx
+  src/
+    EnglishLearning.API/
+    EnglishLearning.Application/
+    EnglishLearning.Domain/
+    EnglishLearning.Infrastructure/
+frontend/
+  src/
+    components/
+    features/
+    layouts/
+tests/
+  EnglishLearning.UnitTests/
+  EnglishLearning.IntegrationTests/
+```

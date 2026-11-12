@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAuthToken } from '../auth/authStorage';
+import { SkeletonBlock } from '../../components/common/Skeleton';
 import './TestPage.css';
 
 interface Question {
@@ -145,7 +146,42 @@ export default function TestPage() {
   }, [timeLeft, submitted, isSubmitting, answeredCount]);
 
   if (loading) {
-    return <main className="test-page-container test-state"><p>Đang tải bài kiểm tra...</p></main>;
+    return (
+      <main className="test-page-container test-page-skeleton" role="status" aria-label="Đang tải bài kiểm tra">
+        <header className="test-header">
+          <div className="test-page-skeleton__title">
+            <SkeletonBlock height="13px" width="145px" />
+            <SkeletonBlock height="30px" width="min(340px, 60vw)" />
+          </div>
+          <SkeletonBlock className="test-page-skeleton__timer" height="42px" width="130px" />
+        </header>
+        <div className="test-body">
+          <section className="test-main-content test-page-skeleton__question">
+            <SkeletonBlock height="13px" width="105px" />
+            <SkeletonBlock height="28px" width="min(500px, 80%)" />
+            <div className="test-page-skeleton__answers">
+              {[0, 1, 2, 3].map((item) => (
+                <SkeletonBlock height="52px" width="100%" key={item} />
+              ))}
+            </div>
+            <div className="test-page-skeleton__actions">
+              <SkeletonBlock height="42px" width="105px" />
+              <SkeletonBlock height="42px" width="105px" />
+            </div>
+          </section>
+          <aside className="test-sidebar test-page-skeleton__sidebar">
+            <SkeletonBlock height="22px" width="110px" />
+            <SkeletonBlock height="14px" width="150px" />
+            <div className="test-page-skeleton__grid">
+              {Array.from({ length: 10 }, (_, item) => (
+                <SkeletonBlock height="39px" width="100%" key={item} />
+              ))}
+            </div>
+            <SkeletonBlock height="42px" width="100%" />
+          </aside>
+        </div>
+      </main>
+    );
   }
 
   if (error || !testData) {

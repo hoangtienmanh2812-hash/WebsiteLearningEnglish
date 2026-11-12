@@ -49,3 +49,16 @@
   cursor: pointer;
   font-weight: 700;
 }
+
+.test-card--skeleton {
+  gap: 14px;
+}
+
+.test-card--skeleton .skeleton-block:nth-child(2) {
+  margin-top: 6px;
+}
+
+.test-card--skeleton .test-card__skeleton-button {
+  margin-top: auto;
+  border-radius: 8px;
+}

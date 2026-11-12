@@ -1,11 +1,13 @@
 /* --- BỌC NGOÀI MENU (SIDEBAR) --- */
 .navbar-shell {
-  width: 260px; /* Độ rộng cố định của sidebar */
-  height: calc(100vh - 32px);
-  margin: 16px 0 16px 16px;
-  border: 1px solid rgb(255 255 255 / 45%);
+  width: clamp(216px, 16vw, 280px);
+  height: calc(100vh - clamp(20px, 1.6vw, 32px));
+  height: calc(100dvh - clamp(20px, 1.6vw, 32px));
+  margin: clamp(10px, 0.8vw, 16px) 0 clamp(10px, 0.8vw, 16px) clamp(10px, 0.8vw, 16px);
+  border: 1px solid #294b40;
   border-radius: 24px;
-  background: rgb(255 255 255 / 58%);
+  background: #2e5447;
+  box-shadow: 0 12px 30px rgb(31 65 51 / 18%);
   -webkit-backdrop-filter: blur(20px) saturate(145%);
   backdrop-filter: blur(20px) saturate(145%);
   position: sticky;
@@ -18,7 +20,7 @@
   display: flex;
   flex-direction: column; /* Xếp dọc toàn bộ các phần tử */
   height: 100%;
-  padding: 24px 16px;
+  padding: clamp(18px, 1.4vw, 26px) clamp(12px, 1vw, 18px);
 }
 
 /* --- LOGO --- */
@@ -26,9 +28,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 20px;
+  font-size: clamp(16px, 1.15vw, 20px);
   font-weight: 800;
-  color: #29211f;
+  color: #fcfbf1;
   text-decoration: none;
   padding: 0 12px 32px 12px; 
 }
@@ -39,7 +41,7 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  background-color: #fbbf24;
+  background-color: #e5b53f;
   border-radius: 8px;
   color: #fff;
 }
@@ -57,10 +59,10 @@
   display: flex;
   align-items: center;
   width: 100%;
-  padding: 14px 16px;
+  padding: clamp(11px, 0.9vw, 14px) clamp(10px, 0.9vw, 16px);
   font-weight: 700;
-  font-size: 15px;
-  color: #625956;
+  font-size: clamp(13px, 0.85vw, 15px);
+  color: #e4e9d8;
   text-decoration: none;
   border-radius: 12px;
   border: 2px solid transparent;
@@ -72,14 +74,14 @@
 
 /* Hiệu ứng khi đang ở trang hiện tại (Active) */
 .navbar__link.active {
-  color: #b7150a;
-  background-color: rgb(255 255 255 / 58%);
-  border-color: transparent;
+  border-color: #e5b53f;
+  color: #294b40;
+  background-color: #e5b53f;
 }
 
 .navbar__link:hover:not(.navbar__link--pending) {
-  color: #b7150a;
-  background-color: rgb(255 255 255 / 58%);
+  color: #fcfbf1;
+  background-color: rgb(255 255 255 / 12%);
 }
 
 .navbar__link--pending {
@@ -87,51 +89,50 @@
   cursor: not-allowed;
 }
 
-/* --- USER MENU (GÓC DƯỚI CÙNG) --- */
-.user-menu {
-  position: relative;
-  width: 100%;
-  margin-top: auto; /* Tự động đẩy xuống sát đáy */
-}
-.user-menu__trigger svg {
-  width: 16px;          /* Thu nhỏ kích thước mũi tên */
-  height: 16px;
-  fill: none;           /* Xóa mảng màu đen đặc */
-  stroke: currentColor; /* Dùng viền màu thay thế */
-  stroke-width: 2.5;    /* Độ dày của viền mũi tên */
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  margin-left: auto;    /* Đẩy mũi tên dạt sang sát lề phải */
-  color: #9ca3af;       /* Màu xám nhạt cho tinh tế */
-}
+/* --- LIÊN KẾT TÀI KHOẢN (GÓC DƯỚI CÙNG) --- */
 .user-menu__trigger {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
   width: 100%;
-  border-radius: 12px;
-  cursor: pointer;
-  list-style: none; 
-  background: transparent;
+  margin-top: auto;
+  padding: 10px 12px;
   border: 2px solid transparent;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
   transition: 0.2s;
 }
 
-.user-menu__trigger::-webkit-details-marker {
-  display: none; /* Ẩn mũi tên mặc định của thẻ details */
+.user-menu__trigger:hover {
+  background-color: rgb(255 255 255 / 12%);
+  border-color: rgb(255 255 255 / 20%);
 }
 
-.user-menu__trigger:hover {
-  background-color: #f3f4f6;
-  border-color: #e5e7eb;
+.user-menu__trigger.active {
+  border-color: rgb(255 255 255 / 24%);
+  background-color: rgb(255 255 255 / 10%);
+}
+
+.user-menu__trigger svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  margin-left: auto;
+  color: #d3ddc9;
+  transform: rotate(-90deg);
 }
 
 .user-menu__avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #fbbf24;
+  background: #e5b53f;
   color: white;
   display: flex;
   align-items: center;
@@ -140,65 +141,25 @@
 }
 
 .user-menu__name {
-  flex: 1;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 700;
-  color: #29211f;
+  color: #fcfbf1;
   text-align: left;
 }
 
-/* Bảng popup Đăng xuất (Hiển thị nảy lên trên thay vì rủ xuống dưới) */
-.user-menu__panel {
-  position: absolute;
-  bottom: 100%; /* Đẩy panel lên phía trên nút bấm */
-  left: 0;
-  width: 100%;
-  margin-bottom: 12px;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  z-index: 50;
+.user-menu__details {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 3px;
 }
 
-.user-menu__identity {
-  margin: 0 0 16px 0;
-  font-size: 14px;
-  color: #6b7280;
-}
-
-.user-menu__identity strong {
-  display: block;
-  color: #374151;
-  margin-bottom: 4px;
-  font-size: 16px;
-}
-
-.user-menu__logout {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 12px;
-  border: none;
-  background: transparent;
-  color: #ef4444;
-  font-weight: bold;
-  font-size: 15px;
-  cursor: pointer;
-  border-radius: 8px;
-}
-
-.user-menu__logout:hover {
-  background: #fef2f2;
-}
-
-.user-menu__logout svg {
-  width: 20px;
-  height: 20px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
+.user-menu__caption {
+  color: #cad7c9;
+  font-size: 11px;
 }
 
 /* --- TRÊN ĐIỆN THOẠI (Xếp lại thành hàng ngang) --- */
@@ -211,6 +172,7 @@
     border-radius: 0;
     border-bottom: 1px solid rgb(255 255 255 / 45%);
   }
+
   .navbar {
     flex-direction: row;
     align-items: center;
@@ -223,19 +185,29 @@
   .navbar__navigation {
     display: none; /* Ẩn tạm thanh điều hướng trên mobile để tránh chật */
   }
-  .user-menu {
+  .user-menu__trigger {
     width: auto;
-    margin-top: 0;
+    margin: 0;
+    padding: 6px;
   }
-  .user-menu__name {
-    display: none; 
+  .user-menu__details,
+  .user-menu__trigger > svg {
+    display: none;
   }
-  .user-menu__panel {
-    bottom: auto;
-    top: 100%;
-    right: 0;
-    left: auto;
-    min-width: 200px;
-    margin-top: 8px;
+}
+
+@media (min-width: 721px) and (max-width: 1100px) {
+  .navbar-shell {
+    width: 216px;
+  }
+
+  .navbar__brand {
+    gap: 9px;
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .navbar__link {
+    padding-inline: 10px;
   }
 }

@@ -122,6 +122,21 @@
   white-space: nowrap;
 }
 
+.admin-lessons__count-skeleton {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.admin-lessons__folder-skeleton {
+  display: grid;
+  min-height: 48px;
+  align-items: center;
+  margin: 14px 0;
+  padding: 14px 16px;
+  border: 1px dashed #d3dfe2;
+  border-radius: 9px;
+}
+
 .admin-lessons__message,
 .admin-lessons__state {
   margin: 14px 0;

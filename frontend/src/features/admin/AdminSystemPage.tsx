@@ -7,6 +7,7 @@ import {
   saveGamificationSettings,
   type SystemLog,
 } from './adminSystemApi';
+import { SkeletonBlock, SkeletonTable } from '../../components/common/Skeleton';
 import './adminSystem.css';
 
 export default function AdminSystemPage() {
@@ -151,9 +152,11 @@ export default function AdminSystemPage() {
             <h2>Nhật ký hệ thống</h2>
             <p>Lịch sử thay đổi cấu hình, sao lưu và lỗi máy chủ gần đây.</p>
           </div>
-          <span>{isLoading ? 'Đang tải...' : `${logs.length} mục gần nhất`}</span>
+          <span>{isLoading ? <SkeletonBlock className="admin-system__count-skeleton" height="14px" width="100px" /> : `${logs.length} mục gần nhất`}</span>
         </div>
-        {logs.length === 0 && !isLoading ? (
+        {isLoading ? (
+          <SkeletonTable columns={4} rows={5} />
+        ) : logs.length === 0 ? (
           <p className="admin-system__empty">Chưa có nhật ký hệ thống.</p>
         ) : (
           <div className="admin-system__logs-wrap">

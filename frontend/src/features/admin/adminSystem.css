@@ -138,6 +138,11 @@
   white-space: nowrap;
 }
 
+.admin-system__count-skeleton {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .admin-system__logs-wrap {
   overflow-x: auto;
   margin-top: 18px;

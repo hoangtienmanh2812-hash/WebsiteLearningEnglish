@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAuthToken, getAuthUser } from '../auth/authStorage';
+import { SkeletonBlock } from '../../components/common/Skeleton';
 import './quiz.css';
 
 interface Question {
@@ -56,6 +57,7 @@ export default function QuizPage() {
             "correct-ans": string;
           }>;
           file_dinh_kem?: string;
+          attachment_error?: string | null;
         };
         if (!Array.isArray(data.questions)) {
           throw new Error('Dữ liệu câu hỏi không đúng định dạng');
@@ -75,6 +77,7 @@ export default function QuizPage() {
             ? `http://localhost:5219/api/quiz/${id}/attachment`
             : null,
         );
+        setAttachmentError(data.attachment_error ?? null);
       } catch (error) {
         console.error('Lỗi khi gọi API:', error);
         setAttachmentPath(null);
@@ -203,8 +206,27 @@ export default function QuizPage() {
 
   if (loading) {
     return (
-      <div className="quiz-layout" style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <h2>Đang tải câu hỏi từ database...</h2>
+      <div className="quiz-layout quiz-skeleton" role="status" aria-label="Đang tải câu hỏi">
+        <header className="quiz-header">
+          <SkeletonBlock className="quiz-skeleton__close" height="40px" width="40px" />
+          <SkeletonBlock className="quiz-skeleton__progress" height="16px" width="100%" />
+          <SkeletonBlock className="skeleton-block--pill" height="22px" width="55px" />
+        </header>
+        <main className="quiz-content quiz-skeleton__content">
+          <SkeletonBlock height="13px" width="140px" />
+          <SkeletonBlock height="32px" width="85%" />
+          <div className="quiz-skeleton__options">
+            {[0, 1, 2, 3].map((item) => (
+              <SkeletonBlock height="64px" width="100%" key={item} />
+            ))}
+          </div>
+        </main>
+        <footer className="quiz-footer">
+          <div className="footer-content quiz-skeleton__footer">
+            <SkeletonBlock height="22px" width="120px" />
+            <SkeletonBlock height="50px" width="160px" />
+          </div>
+        </footer>
       </div>
     );
   }
@@ -283,7 +305,13 @@ export default function QuizPage() {
             <h3 className="attachment-title">
               {attachment?.kind === 'audio' ? 'Bài nghe' : 'Bài đọc'}
             </h3>
-            {attachmentLoading && <p className="attachment-status">Đang tải tài liệu...</p>}
+            {attachmentLoading && (
+              <div className="quiz-skeleton__attachment" role="status" aria-label="Đang tải tài liệu">
+                <SkeletonBlock height="16px" width="55%" />
+                <SkeletonBlock height="16px" width="82%" />
+                <SkeletonBlock height="16px" width="68%" />
+              </div>
+            )}
             {attachmentError && <p className="attachment-error">{attachmentError}</p>}
             {attachment?.kind === 'text' && (
               <div className="reading-passage">{attachment.content}</div>

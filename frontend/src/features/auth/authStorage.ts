@@ -89,6 +89,15 @@ export function getAuthToken(): string | null {
   return getActiveStorage()?.getItem(TOKEN_KEY) ?? null;
 }
 
+export function updateAuthUser(updates: Partial<Pick<AuthUser, 'fullName' | 'email'>>): void {
+  const storage = getActiveStorage();
+  const userJson = storage?.getItem(USER_KEY);
+  if (!storage || !userJson) return;
+
+  const user = JSON.parse(userJson) as AuthUser;
+  storage.setItem(USER_KEY, JSON.stringify({ ...user, ...updates } satisfies AuthUser));
+}
+
 export function isAdmin(): boolean {
   return getAuthUser()?.isAdmin === true;
 }
