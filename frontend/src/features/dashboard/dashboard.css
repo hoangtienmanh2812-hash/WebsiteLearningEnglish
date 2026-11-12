@@ -490,6 +490,23 @@
   color: #929b8c;
 }
 
+.dashboard-skeleton__node {
+  cursor: default;
+}
+
+.dashboard-skeleton__node:hover {
+  transform: none;
+}
+
+.dashboard-skeleton__node:not(:last-child)::after {
+  background: #e9e9dc;
+  box-shadow: none;
+}
+
+.dashboard-skeleton__node .dashboard-skeleton__circle {
+  margin-bottom: 9px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .node,
   .circle {

@@ -18,6 +18,8 @@ namespace EnglishLearning.Infrastructure.Data
         public DbSet<SystemSetting> SystemSettings { get; set; }
         public DbSet<UserQuestionXpAward> UserQuestionXpAwards { get; set; }
         public DbSet<SystemLog> SystemLogs { get; set; }
+        public DbSet<ChatConversation> ChatConversations { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -88,6 +90,38 @@ namespace EnglishLearning.Infrastructure.Data
                 entity.Property(log => log.Category).IsRequired().HasMaxLength(200);
                 entity.Property(log => log.Message).IsRequired().HasMaxLength(2000);
                 entity.HasIndex(log => log.OccurredAt);
+            });
+
+            modelBuilder.Entity<ChatConversation>(entity =>
+            {
+                entity.HasKey(conversation => conversation.Id);
+                entity.Property(conversation => conversation.Title)
+                    .IsRequired()
+                    .HasMaxLength(120);
+                entity.Property(conversation => conversation.CreatedAt).IsRequired();
+                entity.Property(conversation => conversation.UpdatedAt).IsRequired();
+                entity.HasIndex(conversation => new { conversation.UserId, conversation.UpdatedAt });
+                entity.HasOne(conversation => conversation.User)
+                    .WithMany()
+                    .HasForeignKey(conversation => conversation.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ChatMessage>(entity =>
+            {
+                entity.HasKey(message => message.Id);
+                entity.Property(message => message.Role)
+                    .IsRequired()
+                    .HasMaxLength(16);
+                entity.Property(message => message.Content)
+                    .IsRequired()
+                    .HasColumnType("nvarchar(max)");
+                entity.Property(message => message.CreatedAt).IsRequired();
+                entity.HasIndex(message => new { message.ConversationId, message.CreatedAt });
+                entity.HasOne(message => message.Conversation)
+                    .WithMany(conversation => conversation.Messages)
+                    .HasForeignKey(message => message.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }

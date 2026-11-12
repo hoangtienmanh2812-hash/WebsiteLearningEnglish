@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
+import ChatbotWidget from '../components/common/ChatbotWidget';
 import './mainLayout.css';
 
 export default function MainLayout() {
@@ -9,6 +10,7 @@ export default function MainLayout() {
       <main className="main-layout__content">
         <Outlet />
       </main>
+      <ChatbotWidget />
     </div>
   );
 }

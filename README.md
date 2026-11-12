@@ -97,11 +97,9 @@ Server=localhost;Database=EnglishLearningDb;Trusted_Connection=True;TrustServerC
 
 Nếu cần, cập nhật `ConnectionStrings:DefaultConnection` trong cấu hình Development hoặc đặt biến môi trường `ConnectionStrings__DefaultConnection`. Không đưa mật khẩu hoặc thông tin nhạy cảm vào Git.
 
-Backend yêu cầu `Jwt:Secret` dài tối thiểu 32 byte. Mở PowerShell tại thư mục gốc repository rồi chạy nguyên lần lượt các lệnh sau để khởi tạo User Secrets, tự tạo secret ngẫu nhiên và lưu vào cấu hình local:
+Backend yêu cầu `Jwt:Secret` dài tối thiểu 32 byte. User Secrets đã được bật cho project API. Mở PowerShell tại thư mục gốc repository rồi chạy các lệnh sau để tự tạo secret ngẫu nhiên và lưu vào cấu hình local:
 
 ```powershell
-dotnet user-secrets init --project backend\src\EnglishLearning.API
-
 $bytes = New-Object byte[] 48
 $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
 $rng.GetBytes($bytes)
@@ -113,7 +111,16 @@ $rng.Dispose()
 Remove-Variable secret, bytes, rng
 ```
 
-Các lệnh trên chạy trong PowerShell. Nếu User Secrets đã được khởi tạo cho project trước đó, bỏ qua lệnh `dotnet user-secrets init` và chạy các lệnh còn lại để tạo secret mới. Secret chỉ được lưu trong User Secrets trên máy hiện tại, không được commit vào repository. Nếu không dùng User Secrets, có thể tự đặt biến môi trường `Jwt__Secret`.
+Các lệnh trên chạy trong PowerShell. Secret chỉ được lưu trong User Secrets trên máy hiện tại, không được commit vào repository. Nếu không dùng User Secrets, có thể tự đặt biến môi trường `Jwt__Secret`.
+
+Để bật English Buddy, lấy Gemini API key từ Google AI Studio rồi lưu bằng User Secrets (không thêm key vào frontend hoặc `appsettings*.json`):
+
+```powershell
+dotnet user-secrets set "Gemini:ApiKey" "<API_KEY>" --project backend\src\EnglishLearning.API
+dotnet user-secrets set "Gemini:Model" "gemini-3.5-flash-lite" --project backend\src\EnglishLearning.API
+```
+
+Model mặc định là `gemini-3.5-flash-lite` (model stable được Google khuyến nghị cho project mới). Có thể chọn model khác bằng `Gemini:Model` hoặc biến môi trường `Gemini__Model`. API key cũng có thể được đặt qua biến môi trường `Gemini__ApiKey`.
 
 ### 5. Tạo hoặc cập nhật database
 
@@ -133,6 +140,23 @@ dotnet run --project src\EnglishLearning.API\EnglishLearning.API.csproj
 ```
 
 Profile mặc định chạy môi trường Development. API có địa chỉ `http://localhost:5219` và `https://localhost:7200`; Swagger UI được mở tại `/swagger` trong môi trường Development.
+
+### Thử chatbot
+
+Chatbot yêu cầu tài khoản đăng nhập và database đã được cập nhật migration. Trong Swagger:
+
+1. Gọi `POST /api/Auth/login` bằng thông tin tài khoản hiện có.
+2. Chọn **Authorize** và nhập JWT nhận được (không cần thêm tiền tố `Bearer`).
+3. Gọi `POST /api/chatbot/messages` với nội dung:
+
+```json
+{
+  "message": "Giải thích sự khác nhau giữa say và tell",
+  "conversationId": null
+}
+```
+
+Phản hồi chứa `conversationId`, tin nhắn người dùng và câu trả lời Gemini. Dùng `conversationId` đó cho tin nhắn kế tiếp; `GET /api/chatbot/conversations` và `GET /api/chatbot/conversations/{id}/messages` dùng để tải lịch sử. Nếu thiếu Gemini API key, gửi tin nhắn trả HTTP 503; lỗi từ Gemini trả HTTP 502. Có thể kiểm tra luồng đầy đủ từ widget **Hỏi English Buddy** sau khi đăng nhập frontend.
 
 ### 7. Khởi động frontend
 

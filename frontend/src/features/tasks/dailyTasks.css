@@ -53,28 +53,50 @@
   font: inherit;
 }
 
-.daily-tasks__levels {
-  display: grid;
-  gap: 15px;
-}
-
-.daily-level {
+.daily-mission {
+  margin-bottom: 20px;
   padding: 19px 22px 18px;
   border: 1px solid var(--daily-border);
   border-radius: 18px;
   background: rgb(255 255 255 / 92%);
   box-shadow: 0 8px 24px rgb(75 44 38 / 4%);
-  transition: border-color 180ms ease, box-shadow 180ms ease;
 }
 
-.daily-level--active {
-  border-color: #e7b6ac;
-  box-shadow: 0 8px 26px rgb(187 57 44 / 8%);
-}
-
-.daily-level--complete {
+.daily-mission--complete {
   border-color: #cde7d7;
   background: #fbfffc;
+}
+
+.daily-mission h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.daily-mission__description {
+  margin: 0 0 13px;
+  color: var(--daily-muted);
+  font-size: 13px;
+}
+
+.daily-mission__link {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--daily-accent);
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.daily-mission__link:hover {
+  text-decoration: underline;
+}
+
+.daily-mission__link:focus-visible {
+  outline: 3px solid rgb(187 57 44 / 24%);
+  outline-offset: 3px;
+  border-radius: 3px;
 }
 
 .daily-level__topline {
@@ -101,13 +123,6 @@
   color: #287c51;
 }
 
-.daily-level h2 {
-  margin: 0 0 12px;
-  font-size: 18px;
-  font-weight: 750;
-  letter-spacing: -0.02em;
-}
-
 .daily-level__progress {
   position: relative;
   height: 27px;
@@ -126,7 +141,7 @@
   transition: width 300ms ease;
 }
 
-.daily-level--complete .daily-level__progress > span:first-child {
+.daily-mission--complete .daily-level__progress > span:first-child {
   background: linear-gradient(90deg, #47a775, #74c48c);
 }
 
@@ -378,9 +393,9 @@
   border-radius: 12px;
 }
 
-.daily-level--skeleton {
+.daily-mission--skeleton {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .daily-word--skeleton {
@@ -416,11 +431,11 @@
     font-size: 12px;
   }
 
-  .daily-level {
+  .daily-mission {
     padding: 16px;
   }
 
-  .daily-level h2 {
+  .daily-mission h2 {
     font-size: 16px;
   }
 

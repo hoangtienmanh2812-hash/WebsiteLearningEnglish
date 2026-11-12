@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 import { SkeletonBlock } from '../../components/common/Skeleton';
 import { getAuthToken, getAuthUser } from '../auth/authStorage';
 import './dailyTasks.css';
@@ -19,7 +20,11 @@ interface DailyPackResponse {
   xpPerVocabulary: number;
 }
 
-const levelGoals = [10, 20, 30];
+interface DailyLessonProgressResponse {
+  completedLessons: number;
+}
+
+const dailyLessonGoal = 3;
 
 export const DailyTasks = () => {
   const [vocabs, setVocabs] = useState<Vocab[]>([]);
@@ -32,7 +37,35 @@ export const DailyTasks = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [xpPerVocabulary, setXpPerVocabulary] = useState<number | null>(null);
+  const [completedLessonsToday, setCompletedLessonsToday] = useState<number | null>(null);
+  const [lessonProgressError, setLessonProgressError] = useState<string | null>(null);
   const userId = getAuthUser()?.id;
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchDailyLessonProgress() {
+      try {
+        const response = await axios.get<DailyLessonProgressResponse>(
+          'http://localhost:5219/api/progress/daily-completed-count',
+          { headers: authorizationHeaders(), signal: controller.signal },
+        );
+        if (!Number.isInteger(response.data.completedLessons) || response.data.completedLessons < 0) {
+          throw new Error('Dữ liệu tiến độ bài học không đúng định dạng.');
+        }
+
+        setCompletedLessonsToday(response.data.completedLessons);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error('Lỗi tải tiến độ nhiệm vụ bài học:', err);
+          setLessonProgressError('Không thể tải tiến độ bài học hôm nay.');
+        }
+      }
+    }
+
+    void fetchDailyLessonProgress();
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     async function fetchDailyPack() {
@@ -112,15 +145,13 @@ export const DailyTasks = () => {
           </div>
           <SkeletonBlock className="daily-skeleton__picker" height="48px" width="120px" />
         </header>
-        <div className="daily-tasks__levels">
-          {levelGoals.map((goal) => (
-            <article className="daily-level daily-level--skeleton" key={goal}>
-              <SkeletonBlock height="13px" width="92px" />
-              <SkeletonBlock height="21px" width="140px" />
-              <SkeletonBlock className="daily-skeleton__progress" height="27px" width="100%" />
-            </article>
-          ))}
-        </div>
+        <article className="daily-mission daily-mission--skeleton">
+          <SkeletonBlock height="12px" width="95px" />
+          <SkeletonBlock height="22px" width="220px" />
+          <SkeletonBlock height="14px" width="min(420px, 85%)" />
+          <SkeletonBlock className="daily-skeleton__progress" height="27px" width="100%" />
+          <SkeletonBlock height="18px" width="130px" />
+        </article>
         <section className="daily-word daily-word--skeleton">
           <div className="daily-word__heading">
             <div className="daily-skeleton__word-heading">
@@ -140,23 +171,12 @@ export const DailyTasks = () => {
     );
   }
 
-  if (error && vocabs.length === 0) {
-    return <p className="daily-tasks__message daily-tasks__message--error" role="alert">{error}</p>;
-  }
-
-  if (vocabs.length === 0) {
-    return <p className="daily-tasks__message">Chưa có từ vựng cho Ngày {dayNumber}.</p>;
-  }
-
   const currentVocab = vocabs[currentIndex];
-  if (!currentVocab) {
-    return <p className="daily-tasks__message daily-tasks__message--error" role="alert">Không tìm thấy từ vựng hiện tại.</p>;
-  }
-
   const currentLearnedCount = learnedIds.filter((id) => vocabs.some((vocab) => vocab.id === id)).length;
-  const earnedXp = currentLearnedCount * (xpPerVocabulary ?? 0);
-  const isCurrentLearned = learnedIds.includes(currentVocab.id);
-  const allWordsLearned = currentLearnedCount === vocabs.length;
+  const isCurrentLearned = currentVocab ? learnedIds.includes(currentVocab.id) : false;
+  const allWordsLearned = vocabs.length > 0 && currentLearnedCount === vocabs.length;
+  const isLessonTaskComplete = (completedLessonsToday ?? 0) >= dailyLessonGoal;
+  const displayedLessonCount = Math.min(completedLessonsToday ?? 0, dailyLessonGoal);
 
   return (
     <section className="daily-tasks" aria-labelledby="daily-tasks-title">
@@ -164,7 +184,7 @@ export const DailyTasks = () => {
         <div>
           <p className="daily-tasks__eyebrow">MỖI NGÀY MỘT CHÚT TIẾN BỘ</p>
           <h1 id="daily-tasks-title">Nhiệm vụ hàng ngày</h1>
-          <p className="daily-tasks__subtitle">Học từ mới, tích lũy EXP và chinh phục từng cấp độ.</p>
+          <p className="daily-tasks__subtitle">Hoàn thành bài học và học thêm từ mới mỗi ngày.</p>
         </div>
         <label className="daily-tasks__day-picker">
           <span>Gói học</span>
@@ -175,45 +195,48 @@ export const DailyTasks = () => {
         </label>
       </header>
 
-      <section className="daily-tasks__levels" aria-label="Ba cấp độ nhiệm vụ">
-        {levelGoals.map((goal, index) => {
-          const progress = Math.min(earnedXp, goal);
-          const isComplete = earnedXp >= goal;
-          const isActive = !isComplete && (index === 0 || earnedXp >= levelGoals[index - 1]);
-
-          return (
-            <article
-              className={`daily-level${isComplete ? ' daily-level--complete' : ''}${isActive ? ' daily-level--active' : ''}`}
-              key={goal}
-            >
-              <div className="daily-level__topline">
-                <span className="daily-level__name">Cấp độ {index + 1}</span>
-                <span className={`daily-level__status${isComplete ? ' daily-level__status--complete' : ''}`}>
-                  {isComplete ? '✓ Hoàn thành' : `${goal} EXP`}
-                </span>
-              </div>
-              <h2>Kiếm {goal} EXP</h2>
-              <div
-                className="daily-level__progress"
-                role="progressbar"
-                aria-label={`Tiến độ cấp độ ${index + 1}`}
-                aria-valuemin={0}
-                aria-valuemax={goal}
-                aria-valuenow={progress}
-              >
-                <span style={{ width: `${(progress / goal) * 100}%` }} />
-                <span className="daily-level__count">{progress} / {goal}</span>
-              </div>
-            </article>
-          );
-        })}
-      </section>
+      <article
+        className={`daily-mission${isLessonTaskComplete ? ' daily-mission--complete' : ''}`}
+        aria-labelledby="daily-lesson-title"
+        aria-busy={completedLessonsToday === null && !lessonProgressError}
+      >
+        <div className="daily-level__topline">
+          <span className="daily-level__name">NHIỆM VỤ 1</span>
+          <span className={`daily-level__status${isLessonTaskComplete ? ' daily-level__status--complete' : ''}`}>
+            {lessonProgressError
+              ? 'Chưa tải được'
+              : completedLessonsToday === null
+                ? 'Đang tải...'
+                : isLessonTaskComplete
+                  ? '✓ Hoàn thành'
+                  : `${displayedLessonCount} / ${dailyLessonGoal} bài`}
+          </span>
+        </div>
+        <h2 id="daily-lesson-title">Hoàn thành 3 bài học</h2>
+        <p className="daily-mission__description">Làm 3 bài học trên trang chủ để hoàn thành nhiệm vụ hôm nay.</p>
+        <div
+          className="daily-level__progress"
+          role="progressbar"
+          aria-label="Tiến độ hoàn thành bài học hôm nay"
+          aria-valuemin={0}
+          aria-valuemax={dailyLessonGoal}
+          aria-valuenow={displayedLessonCount}
+        >
+          <span style={{ width: `${(displayedLessonCount / dailyLessonGoal) * 100}%` }} />
+          <span className="daily-level__count">{displayedLessonCount} / {dailyLessonGoal}</span>
+        </div>
+        {lessonProgressError ? (
+          <p className="daily-tasks__inline-error" role="alert">{lessonProgressError}</p>
+        ) : (
+          <Link className="daily-mission__link" to="/">Làm bài học ngay →</Link>
+        )}
+      </article>
 
       <section className="daily-word" aria-labelledby="daily-word-title">
         <div className="daily-word__heading">
           <div>
-            <p className="daily-tasks__eyebrow">NHIỆM VỤ TỪ VỰNG</p>
-            <h2 id="daily-word-title">{title}</h2>
+            <p className="daily-tasks__eyebrow">NHIỆM VỤ 2 · TỪ VỰNG</p>
+            <h2 id="daily-word-title">{title ? `Học từ mới: ${title}` : 'Học từ mới'}</h2>
           </div>
           <span className="daily-word__counter">
             {currentLearnedCount}/{vocabs.length} từ
@@ -222,7 +245,13 @@ export const DailyTasks = () => {
 
         {error && <p className="daily-tasks__inline-error" role="alert">{error}</p>}
 
-        {allWordsLearned ? (
+        {vocabs.length === 0 ? (
+          <p className={`daily-tasks__message${error ? ' daily-tasks__message--error' : ''}`} role={error ? 'alert' : undefined}>
+            {error ?? `Chưa có từ vựng cho Ngày ${dayNumber}.`}
+          </p>
+        ) : !currentVocab ? (
+          <p className="daily-tasks__message daily-tasks__message--error" role="alert">Không tìm thấy từ vựng hiện tại.</p>
+        ) : allWordsLearned ? (
           <div className="daily-word__complete" role="status">
             <span aria-hidden="true">🎉</span>
             <h3>Hoàn thành gói từ vựng!</h3>

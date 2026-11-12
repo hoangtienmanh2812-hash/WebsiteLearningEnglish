@@ -67,8 +67,33 @@ public class ProgressController : ControllerBase
     }
 
     [Authorize]
+    [HttpGet("daily-completed-count")]
+    public async Task<IActionResult> GetDailyCompletedCount(CancellationToken cancellationToken)
+    {
+        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        if (!Guid.TryParse(userIdValue, out var authenticatedUserId))
+        {
+            return Unauthorized(new { message = "Không xác định được tài khoản hiện tại." });
+        }
+
+        var today = DateTime.UtcNow.Date;
+        var tomorrow = today.AddDays(1);
+        var completedCount = await _context.UserProgresses
+            .CountAsync(progress =>
+                progress.UserId == authenticatedUserId &&
+                progress.IsCompleted &&
+                progress.LastCompletedAt >= today &&
+                progress.LastCompletedAt < tomorrow,
+                cancellationToken);
+
+        return Ok(new { completedLessons = completedCount });
+    }
+
+    [Authorize]
     [HttpPost("complete")]
-    public async Task<IActionResult> CompleteLesson([FromBody] CompleteLessonDto dto)
+    public async Task<IActionResult> CompleteLesson(
+        [FromBody] CompleteLessonDto dto,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -91,13 +116,18 @@ public class ProgressController : ControllerBase
                 return BadRequest(new { message = "Chỉ bài học thuộc loại 'lesson' mới được cập nhật tiến độ." });
             }
 
+            var completedAt = DateTime.UtcNow;
             var progress = await _context.UserProgresses
-                .FirstOrDefaultAsync(p => p.UserId == authenticatedUserId && p.LessonId == dto.LessonId);
+                .FirstOrDefaultAsync(
+                    p => p.UserId == authenticatedUserId && p.LessonId == dto.LessonId,
+                    cancellationToken);
             var xpReward = 0;
 
             if (progress?.IsCompleted != true)
             {
-                var user = await _context.Users.FindAsync(authenticatedUserId);
+                var user = await _context.Users.FindAsync(
+                    new object?[] { authenticatedUserId },
+                    cancellationToken);
                 if (user is null)
                 {
                     return NotFound(new { message = "Không tìm thấy người dùng." });
@@ -113,16 +143,22 @@ public class ProgressController : ControllerBase
                     {
                         UserId = authenticatedUserId,
                         LessonId = dto.LessonId,
-                        IsCompleted = true
+                        IsCompleted = true,
+                        LastCompletedAt = completedAt
                     });
                 }
                 else
                 {
                     progress.IsCompleted = true;
+                    progress.LastCompletedAt = completedAt;
                 }
             }
+            else
+            {
+                progress.LastCompletedAt = completedAt;
+            }
 
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(cancellationToken);
             return Ok(new { message = "Đã hoàn thành bài học!", xpReward });
         }
         catch (Exception ex)

@@ -43,6 +43,84 @@ namespace EnglishLearning.Infrastructure.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.ChatConversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "UpdatedAt");
+
+                    b.ToTable("ChatConversations");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.ChatMessage", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "CreatedAt");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.DailyVocabPack", b =>
+                {
+                    b.Property<int>("DayNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DayNumber"));
+
+                    b.Property<string>("JsonUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("DayNumber");
+
+                    b.ToTable("DailyVocabPacks");
+                });
+
             modelBuilder.Entity("EnglishLearning.Domain.Entities.Lesson", b =>
                 {
                     b.Property<int>("Id")
@@ -51,89 +129,28 @@ namespace EnglishLearning.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("DriveUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("CategoriesId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
+                    b.Property<string>("DriveUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LessonType")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(50)
-                        .HasDefaultValue("lesson")
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("lesson");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CategoriesId");
 
                     b.ToTable("Lessons");
-                });
-
-            modelBuilder.Entity("EnglishLearning.Domain.Entities.SystemSetting", b =>
-                {
-                    b.Property<int>("Idsetting")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Idsetting"));
-
-                    b.Property<string>("SettingKey")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("SettingValue")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UsersId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Idsetting");
-
-                    b.HasIndex("SettingKey")
-                        .IsUnique();
-
-                    b.HasIndex("UsersId");
-
-                    b.ToTable("SystemSettings");
-                });
-
-            modelBuilder.Entity("EnglishLearning.Domain.Entities.UserQuestionXpAward", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("AwardedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("LessonId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("QuestionIndex")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId", "LessonId", "QuestionIndex")
-                        .IsUnique();
-
-                    b.ToTable("UserQuestionXpAwards");
                 });
 
             modelBuilder.Entity("EnglishLearning.Domain.Entities.Question", b =>
@@ -189,9 +206,6 @@ namespace EnglishLearning.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<DateTime>("OccurredAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<string>("Level")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -202,11 +216,48 @@ namespace EnglishLearning.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OccurredAt");
 
                     b.ToTable("SystemLogs");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.SystemSetting", b =>
+                {
+                    b.Property<int>("Idsetting")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Idsetting"));
+
+                    b.Property<string>("SettingKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SettingValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UsersId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Idsetting");
+
+                    b.HasIndex("SettingKey")
+                        .IsUnique();
+
+                    b.HasIndex("UsersId");
+
+                    b.ToTable("SystemSettings");
                 });
 
             modelBuilder.Entity("EnglishLearning.Domain.Entities.User", b =>
@@ -223,6 +274,9 @@ namespace EnglishLearning.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<int>("Exp")
+                        .HasColumnType("int");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -230,12 +284,18 @@ namespace EnglishLearning.Infrastructure.Migrations
 
                     b.Property<bool>("IsAdmin")
                         .ValueGeneratedOnAdd()
-                        .HasDefaultValue(false)
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime?>("LastLoginDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StreakCount")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -243,6 +303,33 @@ namespace EnglishLearning.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.UserLearnedVocab", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayNumber")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LearnedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("VocabId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserLearnedVocabs");
                 });
 
             modelBuilder.Entity("EnglishLearning.Domain.Entities.UserProgress", b =>
@@ -256,6 +343,9 @@ namespace EnglishLearning.Infrastructure.Migrations
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("LastCompletedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("LessonId")
                         .HasColumnType("int");
 
@@ -265,6 +355,56 @@ namespace EnglishLearning.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("UserProgresses");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.UserQuestionXpAward", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("AwardedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LessonId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuestionIndex")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "LessonId", "QuestionIndex")
+                        .IsUnique();
+
+                    b.ToTable("UserQuestionXpAwards");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.ChatConversation", b =>
+                {
+                    b.HasOne("EnglishLearning.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.ChatMessage", b =>
+                {
+                    b.HasOne("EnglishLearning.Domain.Entities.ChatConversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Conversation");
                 });
 
             modelBuilder.Entity("EnglishLearning.Domain.Entities.Lesson", b =>
@@ -285,9 +425,25 @@ namespace EnglishLearning.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.UserLearnedVocab", b =>
+                {
+                    b.HasOne("EnglishLearning.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("EnglishLearning.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Lessons");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.ChatConversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }
