@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import {
   getChatbotApiError,
   getChatbotConversations,
@@ -12,6 +19,18 @@ interface ChatMessage {
   id: number;
   text: string;
   sender: 'assistant' | 'user';
+}
+
+interface FloatingPosition {
+  x: number;
+  y: number;
+}
+
+interface DragState extends FloatingPosition {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  moved: boolean;
 }
 
 const starterMessage: ChatMessage = {
@@ -45,6 +64,30 @@ export default function ChatbotWidget() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+  const widgetRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<DragState | null>(null);
+  const suppressClickRef = useRef(false);
+  const [floatingPosition, setFloatingPosition] = useState<FloatingPosition | null>(null);
+
+  useEffect(() => {
+    if (!floatingPosition || !widgetRef.current) return;
+    const position = floatingPosition;
+
+    function keepWidgetInViewport() {
+      const bounds = widgetRef.current?.getBoundingClientRect();
+      if (!bounds) return;
+
+      const x = Math.min(Math.max(0, position.x), window.innerWidth - bounds.width);
+      const y = Math.min(Math.max(0, position.y), window.innerHeight - bounds.height);
+      if (x !== position.x || y !== position.y) {
+        setFloatingPosition({ x, y });
+      }
+    }
+
+    keepWidgetInViewport();
+    window.addEventListener('resize', keepWidgetInViewport);
+    return () => window.removeEventListener('resize', keepWidgetInViewport);
+  }, [floatingPosition, isOpen]);
 
   useEffect(() => {
     if (!isOpen || historyLoaded) return;
@@ -111,8 +154,70 @@ export default function ChatbotWidget() {
     void sendMessage(draft);
   }
 
+  function handleLauncherPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (!event.isPrimary || event.button !== 0 || !widgetRef.current) return;
+
+    const bounds = widgetRef.current.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      x: bounds.left,
+      y: bounds.top,
+      moved: false,
+    };
+    suppressClickRef.current = false;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handleLauncherPointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - drag.startX;
+    const deltaY = event.clientY - drag.startY;
+    if (!drag.moved && Math.hypot(deltaX, deltaY) < 5) return;
+
+    drag.moved = true;
+    suppressClickRef.current = true;
+    const bounds = widgetRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+
+    setFloatingPosition({
+      x: Math.min(Math.max(0, drag.x + deltaX), window.innerWidth - bounds.width),
+      y: Math.min(Math.max(0, drag.y + deltaY), window.innerHeight - bounds.height),
+    });
+  }
+
+  function handleLauncherPointerUp(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (dragRef.current?.pointerId === event.pointerId) {
+      dragRef.current = null;
+    }
+  }
+
+  function handleLauncherClick(event: ReactMouseEvent<HTMLButtonElement>) {
+    if (suppressClickRef.current) {
+      event.preventDefault();
+      suppressClickRef.current = false;
+      return;
+    }
+    setIsOpen((open) => !open);
+  }
+
   return (
-    <div className="chatbot">
+    <div
+      className="chatbot"
+      ref={widgetRef}
+      style={floatingPosition ? {
+        left: floatingPosition.x,
+        top: floatingPosition.y,
+        right: 'auto',
+        bottom: 'auto',
+      } : undefined}
+      data-panel-alignment={
+        floatingPosition && floatingPosition.x < window.innerWidth / 2 ? 'left' : 'right'
+      }
+    >
       {isOpen && (
         <section
           className="chatbot-panel"
@@ -243,9 +348,14 @@ export default function ChatbotWidget() {
       <button
         className={`chatbot-launcher${isOpen ? ' chatbot-launcher--open' : ''}`}
         type="button"
-        onClick={() => setIsOpen((open) => !open)}
+        onPointerDown={handleLauncherPointerDown}
+        onPointerMove={handleLauncherPointerMove}
+        onPointerUp={handleLauncherPointerUp}
+        onPointerCancel={handleLauncherPointerUp}
+        onClick={handleLauncherClick}
         aria-label={isOpen ? 'Đóng English Buddy' : 'Mở chat với English Buddy'}
         aria-expanded={isOpen}
+        title="Kéo để di chuyển, nhấn để mở chat"
       >
         {isOpen ? (
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -257,7 +367,6 @@ export default function ChatbotWidget() {
               <path d="M14 3.5a10.5 10.5 0 0 0-9 15.9L4 24l4.8-1.6A10.5 10.5 0 1 0 14 3.5Z" />
               <path d="M9.5 11h.01M14 11h.01M18.5 11h.01M9 15.5c1.1 1.6 2.8 2.5 5 2.5s3.9-.9 5-2.5" />
             </svg>
-            <span>Hỏi English Buddy</span>
           </>
         )}
       </button>

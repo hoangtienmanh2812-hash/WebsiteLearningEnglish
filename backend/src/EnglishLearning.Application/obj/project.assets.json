@@ -72,24 +72,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\manha\\.nuget\\packages\\": {},
+    "C:\\Users\\Admin\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Application\\EnglishLearning.Application.csproj",
+      "projectUniqueName": "D:\\TTCSN\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Application\\EnglishLearning.Application.csproj",
       "projectName": "EnglishLearning.Application",
-      "projectPath": "D:\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Application\\EnglishLearning.Application.csproj",
-      "packagesPath": "C:\\Users\\manha\\.nuget\\packages\\",
-      "outputPath": "D:\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Application\\obj\\",
+      "projectPath": "D:\\TTCSN\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Application\\EnglishLearning.Application.csproj",
+      "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
+      "outputPath": "D:\\TTCSN\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Application\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "D:\\WebsiteLearningEnglish\\backend\\NuGet.Config",
-        "C:\\Users\\manha\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "D:\\TTCSN\\WebsiteLearningEnglish\\backend\\NuGet.Config",
+        "C:\\Users\\Admin\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -104,8 +104,8 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Domain\\EnglishLearning.Domain.csproj": {
-              "projectPath": "D:\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Domain\\EnglishLearning.Domain.csproj"
+            "D:\\TTCSN\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Domain\\EnglishLearning.Domain.csproj": {
+              "projectPath": "D:\\TTCSN\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Domain\\EnglishLearning.Domain.csproj"
             }
           }
         }
@@ -120,7 +120,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "10.0.300"
+      "SdkAnalysisLevel": "10.0.400"
     },
     "frameworks": {
       "net8.0": {
@@ -146,15 +146,15 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[8.0.29, 8.0.29]"
+            "version": "[8.0.31, 8.0.31]"
           },
           {
             "name": "Microsoft.NETCore.App.Ref",
-            "version": "[8.0.29, 8.0.29]"
+            "version": "[8.0.31, 8.0.31]"
           },
           {
             "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[8.0.29, 8.0.29]"
+            "version": "[8.0.31, 8.0.31]"
           }
         ],
         "frameworkReferences": {
@@ -162,7 +162,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.302/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.401/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

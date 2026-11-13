@@ -65,11 +65,13 @@
 }
 
 .podium-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   padding: 26px 26px 20px;
   background:
     radial-gradient(ellipse at 50% 100%, rgb(221 243 234 / 75%), transparent 58%),
+    radial-gradient(ellipse at 50% 0%, rgb(255 239 191 / 48%), transparent 42%),
     #fff;
 }
 
@@ -115,9 +117,88 @@
   text-align: center;
 }
 
+.podium__place--first {
+  position: relative;
+}
+
+.podium__firework {
+  position: absolute;
+  z-index: 0;
+  width: 52px;
+  height: 52px;
+  pointer-events: none;
+  animation: podium-firework 2.4s ease-out infinite;
+}
+
+.podium__firework svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2.5;
+}
+
+.podium__firework--one {
+  top: 8%;
+  left: 3%;
+  color: #e5b53f;
+}
+
+.podium__firework--two {
+  top: 20%;
+  right: 1%;
+  width: 42px;
+  height: 42px;
+  color: #55a68a;
+  animation-delay: 800ms;
+}
+
+.podium__firework--three {
+  top: 43%;
+  left: 12%;
+  width: 32px;
+  height: 32px;
+  color: #e89a6b;
+  animation-delay: 1600ms;
+}
+
+@keyframes podium-firework {
+  0%,
+  100% {
+    opacity: 0.18;
+    transform: scale(0.45) rotate(-18deg);
+  }
+
+  45% {
+    opacity: 0.9;
+    transform: scale(1) rotate(8deg);
+  }
+}
+
 .podium__medal {
   min-height: 27px;
   font-size: 22px;
+}
+
+.podium__medal--trophy {
+  display: grid;
+  width: 40px;
+  height: 36px;
+  margin-bottom: 4px;
+  place-items: center;
+  color: #b27b12;
+  filter: drop-shadow(0 3px 2px rgb(161 112 19 / 24%));
+}
+
+.podium__medal--trophy svg {
+  width: 34px;
+  height: 34px;
+  fill: #f0c44f;
+  stroke: #9c6a12;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
 }
 
 .podium__avatar {
@@ -139,9 +220,22 @@
   width: 72px;
   height: 72px;
   background: #ffefbf;
-  box-shadow: 0 0 0 2px #e9c65e;
+  box-shadow: 0 0 0 2px #e9c65e, 0 0 0 8px rgb(233 198 94 / 16%);
   color: #a56d13;
   font-size: 28px;
+}
+
+.podium__champion {
+  margin-top: 12px;
+  padding: 5px 10px;
+  border: 1px solid #efdfa8;
+  border-radius: 999px;
+  color: #8b6418;
+  background: #fff6d8;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .podium__name {
@@ -246,6 +340,19 @@
   border-bottom: 1px solid #eef2f1;
   color: #38525a;
   font-size: 13px;
+  transition: background-color 150ms ease;
+}
+
+.ranking-table tbody tr:hover td {
+  background: #f8faf5;
+}
+
+.ranking-table tbody tr:first-child td {
+  background: #fffbef;
+}
+
+.ranking-table tbody tr:first-child:hover td {
+  background: #fff6dc;
 }
 
 .ranking-table tbody tr:last-child td {
@@ -267,6 +374,10 @@
 .ranking-table__rank--2,
 .ranking-table__rank--3 {
   font-size: 17px;
+}
+
+.ranking-table__rank--1 {
+  filter: drop-shadow(0 2px 2px rgb(166 121 29 / 18%));
 }
 
 .ranking-table__learner {
@@ -461,5 +572,13 @@
 
   .ranking-table td {
     font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .podium__firework {
+    animation: none;
+    opacity: 0.55;
+    transform: none;
   }
 }

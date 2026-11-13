@@ -58,6 +58,7 @@
 .navbar__link {
   display: flex;
   align-items: center;
+  gap: 12px;
   width: 100%;
   padding: clamp(11px, 0.9vw, 14px) clamp(10px, 0.9vw, 16px);
   font-weight: 700;
@@ -70,6 +71,17 @@
   cursor: pointer;
   text-align: left;
   transition: 0.2s;
+}
+
+.navbar__link-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 /* Hiệu ứng khi đang ở trang hiện tại (Active) */

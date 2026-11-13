@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "U7wSpz7zP6M=",
+  "dgSpecHash": "dEJU+5ik3N8=",
   "success": true,
-  "projectFilePath": "D:\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Domain\\EnglishLearning.Domain.csproj",
+  "projectFilePath": "D:\\TTCSN\\WebsiteLearningEnglish\\backend\\src\\EnglishLearning.Domain\\EnglishLearning.Domain.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\manha\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.29\\microsoft.netcore.app.ref.8.0.29.nupkg.sha512",
-    "C:\\Users\\manha\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.29\\microsoft.windowsdesktop.app.ref.8.0.29.nupkg.sha512",
-    "C:\\Users\\manha\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.29\\microsoft.aspnetcore.app.ref.8.0.29.nupkg.sha512"
+    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.31\\microsoft.netcore.app.ref.8.0.31.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.31\\microsoft.windowsdesktop.app.ref.8.0.31.nupkg.sha512",
+    "C:\\Users\\Admin\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.31\\microsoft.aspnetcore.app.ref.8.0.31.nupkg.sha512"
   ],
   "logs": []
 }

@@ -121,10 +121,39 @@ export const Leaderboard = () => {
 
                 return (
                   <article className={`podium__place podium__place--${modifier}`} key={user.id}>
-                    <span className="podium__medal" aria-label={`Hạng ${rank}`}>{medal}</span>
+                    {rank === 1 && (
+                      <>
+                        <span className="podium__firework podium__firework--one" aria-hidden="true">
+                          <svg viewBox="0 0 64 64">
+                            <path d="M32 5v12m0 30v12M5 32h12m30 0h12M13 13l9 9m20 20 9 9m0-38-9 9m-20 20-9 9M32 24v4m0 8v4m-8-8h4m8 0h4m-14-6 3 3m6 6 3 3m2-12-3 3m-6 6-3 3" />
+                          </svg>
+                        </span>
+                        <span className="podium__firework podium__firework--two" aria-hidden="true">
+                          <svg viewBox="0 0 64 64">
+                            <path d="M32 8v8m0 32v8M8 32h8m32 0h8M15 15l6 6m22 22 6 6m0-34-6 6M21 43l-6 6m11-17h12m-6-6v12" />
+                          </svg>
+                        </span>
+                        <span className="podium__firework podium__firework--three" aria-hidden="true">
+                          <svg viewBox="0 0 64 64">
+                            <path d="M32 6v10m0 32v10M6 32h10m32 0h10M14 14l7 7m22 22 7 7m0-36-7 7M21 43l-7 7m14-18h8m-4-4v8" />
+                          </svg>
+                        </span>
+                      </>
+                    )}
+                    {rank === 1 ? (
+                      <span className="podium__medal podium__medal--trophy" aria-label="Cúp vô địch - Hạng 1">
+                        <svg viewBox="0 0 32 32" aria-hidden="true">
+                          <path d="M9 5h14v7a7 7 0 0 1-14 0V5Z" />
+                          <path d="M9 8H5v3a6 6 0 0 0 6 6m12-9h4v3a6 6 0 0 1-6 6m-5 1v6m-5 3h10m-8-3h6v3H13v-3Z" />
+                        </svg>
+                      </span>
+                    ) : (
+                      <span className="podium__medal" aria-label={`Hạng ${rank}`}>{medal}</span>
+                    )}
                     <div className="podium__avatar" aria-hidden="true">
                       {name.charAt(0).toUpperCase()}
                     </div>
+                    {rank === 1 && <span className="podium__champion">Quán quân</span>}
                     <h3 className="podium__name" title={name}>{name}</h3>
                     <p className="podium__score">{user.exp.toLocaleString()} <span>EXP</span></p>
                     <div className="podium__platform">

@@ -376,10 +376,6 @@
   background: #89aa7c;
 }
 
-.node:hover:not(:disabled) {
-  transform: translateY(-5px);
-}
-
 .node:focus-visible {
   outline: 3px solid #788d7c;
   outline-offset: 5px;
@@ -407,6 +403,21 @@
   font-size: clamp(27px, 3vw, 36px);
   line-height: 1;
   transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.node:not(:disabled) .circle:hover,
+.node:not(:disabled):active .circle {
+  transform: translateY(5px);
+}
+
+.node.unlocked:not(:disabled) .circle:hover,
+.node.unlocked:not(:disabled):active .circle {
+  box-shadow: 0 2px 0 #438b05, 0 0 0 5px #dce8c8;
+}
+
+.node.completed:not(:disabled) .circle:hover,
+.node.completed:not(:disabled):active .circle {
+  box-shadow: 0 2px 0 #294a3d, 0 0 0 5px #e6ead4;
 }
 
 .node.unlocked .circle {
