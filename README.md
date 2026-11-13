@@ -113,14 +113,28 @@ Remove-Variable secret, bytes, rng
 
 Các lệnh trên chạy trong PowerShell. Secret chỉ được lưu trong User Secrets trên máy hiện tại, không được commit vào repository. Nếu không dùng User Secrets, có thể tự đặt biến môi trường `Jwt__Secret`.
 
-Để bật English Buddy, lấy Gemini API key từ Google AI Studio rồi lưu bằng User Secrets (không thêm key vào frontend hoặc `appsettings*.json`):
+Để bật English Buddy, lấy Gemini API key từ Google AI Studio rồi lưu bằng User Secrets. Chạy tại thư mục gốc repository trong PowerShell:
 
 ```powershell
 dotnet user-secrets set "Gemini:ApiKey" "<API_KEY>" --project backend\src\EnglishLearning.API
+```
+
+Thay `<API_KEY>` bằng key của bạn; không ghi key vào `appsettings*.json`, mã nguồn hoặc frontend. User Secrets được lưu ngoài repository trên máy hiện tại, nên không cần thêm key đó vào `.gitignore`. Sau khi thêm hoặc xoay key, khởi động lại backend để nạp cấu hình mới. Tránh dùng `dotnet user-secrets list` trên màn hình/chia sẻ log vì lệnh này in cả giá trị secrets.
+
+Model mặc định là `gemini-3.5-flash-lite`. Nếu cần đổi model, đặt bằng User Secrets:
+
+```powershell
 dotnet user-secrets set "Gemini:Model" "gemini-3.5-flash-lite" --project backend\src\EnglishLearning.API
 ```
 
-Model mặc định là `gemini-3.5-flash-lite` (model stable được Google khuyến nghị cho project mới). Có thể chọn model khác bằng `Gemini:Model` hoặc biến môi trường `Gemini__Model`. API key cũng có thể được đặt qua biến môi trường `Gemini__ApiKey`.
+Khi triển khai ngoài máy local, đặt biến môi trường `Gemini__ApiKey` trong secret manager của môi trường hosting; có thể đặt model qua `Gemini__Model`.
+
+Giới hạn chatbot được cấu hình trong `backend/src/EnglishLearning.API/appsettings.json`, mục `Chatbot:Limits`:
+
+- Mỗi tài khoản tối đa 5 yêu cầu trong một phút và 20 yêu cầu mỗi ngày (ngày UTC).
+- Tin nhắn tối đa 2.000 ký tự; phản hồi tối đa 512 output tokens; ngữ cảnh tối đa 10 tin nhắn trước đó.
+- Hạn mức ngày được lưu trong SQL Server. Hạn mức phút dùng bộ giới hạn trong tiến trình, nên sẽ được đặt lại khi backend khởi động lại và không chia sẻ giữa nhiều backend instance.
+- Lượt dùng trong ngày được tính khi backend chuẩn bị gửi yêu cầu đến Gemini; lỗi từ Gemini sau thời điểm đó vẫn tính lượt. Chưa cấu hình `Gemini:ApiKey` thì lượt không bị tính.
 
 ### 5. Tạo hoặc cập nhật database
 

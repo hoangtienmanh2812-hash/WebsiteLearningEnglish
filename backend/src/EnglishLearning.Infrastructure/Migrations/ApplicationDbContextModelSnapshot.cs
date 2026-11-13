@@ -100,6 +100,22 @@ namespace EnglishLearning.Infrastructure.Migrations
                     b.ToTable("ChatMessages");
                 });
 
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.ChatbotDailyUsage", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("UsageDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("RequestCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "UsageDate");
+
+                    b.ToTable("ChatbotDailyUsages");
+                });
+
             modelBuilder.Entity("EnglishLearning.Domain.Entities.DailyVocabPack", b =>
                 {
                     b.Property<int>("DayNumber")
@@ -405,6 +421,15 @@ namespace EnglishLearning.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Conversation");
+                });
+
+            modelBuilder.Entity("EnglishLearning.Domain.Entities.ChatbotDailyUsage", b =>
+                {
+                    b.HasOne("EnglishLearning.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("EnglishLearning.Domain.Entities.Lesson", b =>

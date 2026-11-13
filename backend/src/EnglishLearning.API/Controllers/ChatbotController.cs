@@ -4,6 +4,7 @@ using EnglishLearning.Application.Features.Chatbot.DTOs;
 using EnglishLearning.Application.Features.Chatbot.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EnglishLearning.API.Controllers;
 
@@ -51,6 +52,7 @@ public sealed class ChatbotController : ControllerBase
     }
 
     [HttpPost("messages")]
+    [EnableRateLimiting("ChatbotPerUser")]
     public async Task<IActionResult> SendMessage(
         [FromBody] SendChatMessageRequest request,
         CancellationToken cancellationToken)
@@ -83,6 +85,13 @@ public sealed class ChatbotController : ControllerBase
         {
             return StatusCode(
                 StatusCodes.Status502BadGateway,
+                new { message = exception.Message });
+        }
+        catch (ChatbotQuotaExceededException exception)
+        {
+            Response.Headers["Retry-After"] = exception.RetryAfterSeconds.ToString();
+            return StatusCode(
+                StatusCodes.Status429TooManyRequests,
                 new { message = exception.Message });
         }
         catch (KeyNotFoundException exception)

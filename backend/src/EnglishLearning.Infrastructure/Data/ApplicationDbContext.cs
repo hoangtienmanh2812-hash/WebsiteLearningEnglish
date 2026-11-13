@@ -20,6 +20,7 @@ namespace EnglishLearning.Infrastructure.Data
         public DbSet<SystemLog> SystemLogs { get; set; }
         public DbSet<ChatConversation> ChatConversations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ChatbotDailyUsage> ChatbotDailyUsages { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -121,6 +122,16 @@ namespace EnglishLearning.Infrastructure.Data
                 entity.HasOne(message => message.Conversation)
                     .WithMany(conversation => conversation.Messages)
                     .HasForeignKey(message => message.ConversationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ChatbotDailyUsage>(entity =>
+            {
+                entity.HasKey(usage => new { usage.UserId, usage.UsageDate });
+                entity.Property(usage => usage.UsageDate).HasColumnType("date");
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(usage => usage.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
         }

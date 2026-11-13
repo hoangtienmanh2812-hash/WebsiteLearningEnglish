@@ -5,7 +5,6 @@ namespace EnglishLearning.Application.Features.Chatbot.DTOs;
 public sealed class SendChatMessageRequest
 {
     [Required]
-    [StringLength(4000, MinimumLength = 1)]
     public string Message { get; init; } = string.Empty;
 
     public Guid? ConversationId { get; init; }

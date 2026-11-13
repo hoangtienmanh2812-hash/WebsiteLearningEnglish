@@ -1,9 +1,16 @@
+using System.Security.Claims;
+using System.Threading.RateLimiting;
 using EnglishLearning.Application.Features.Chatbot.Interfaces;
 using EnglishLearning.Infrastructure;
 using EnglishLearning.Infrastructure.Chatbot;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+var chatbotLimits = builder.Configuration.GetSection("Chatbot:Limits").Get<ChatbotLimits>()
+    ?? new ChatbotLimits();
+chatbotLimits.Validate();
+builder.Services.AddSingleton(chatbotLimits);
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -39,6 +46,35 @@ builder.Services.AddHttpClient<IChatbotService, GeminiChatbotService>(client =>
 {
     client.Timeout = TimeSpan.FromSeconds(60);
 });
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("ChatbotPerUser", context =>
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? context.User.FindFirstValue("sub");
+        var partitionKey = Guid.TryParse(userId, out var parsedUserId)
+            ? parsedUserId.ToString("N")
+            : context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = chatbotLimits.RequestsPerMinute,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new { message = "Bạn đã vượt quá số lượt chat cho phép trong phút này. Vui lòng thử lại sau." },
+            cancellationToken);
+    };
+});
 
 // Cấu hình CORS để cho phép Frontend (Vite) gọi API
 builder.Services.AddCors(options =>
@@ -64,9 +100,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
+
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();

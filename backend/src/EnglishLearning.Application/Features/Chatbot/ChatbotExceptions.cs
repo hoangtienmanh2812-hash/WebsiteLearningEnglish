@@ -4,3 +4,9 @@ public sealed class ChatbotConfigurationException(string message) : Exception(me
 
 public sealed class ChatbotProviderException(string message, Exception? innerException = null)
     : Exception(message, innerException);
+
+public sealed class ChatbotQuotaExceededException(int retryAfterSeconds, string message)
+    : Exception(message)
+{
+    public int RetryAfterSeconds { get; } = retryAfterSeconds;
+}
